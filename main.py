@@ -332,6 +332,48 @@ def cleanup_old_briefs(today: dt.datetime, retention_days: int) -> list[str]:
     return deleted
 
 
+def generate_sitemap(today: dt.datetime) -> None:
+    exclude_files = {
+        "404.html", "article-template.html",
+        "cookie-policy.html", "disclaimer.html", 
+        "legal.html", "legal-bundle.html", 
+        "privacy-policy.html", "terms-of-service.html"
+    }
+    
+    lastmod = today.strftime("%Y-%m-%d")
+    urls = []
+    
+    # Ensure stable sorting for reproducibility
+    html_files = sorted([f for f in BASE_DIR.glob("*.html") if f.name not in exclude_files])
+    
+    for path in html_files:
+        clean_name = path.name.replace(".html", "")
+        if clean_name == "index":
+            loc = f"{SITE_BASE_URL}/"
+            priority = "1.0"
+        else:
+            loc = f"{SITE_BASE_URL}/{clean_name}"
+            priority = "0.8"
+            
+        urls.append(
+            f"  <url>\n"
+            f"    <loc>{loc}</loc>\n"
+            f"    <lastmod>{lastmod}</lastmod>\n"
+            f"    <priority>{priority}</priority>\n"
+            f"  </url>"
+        )
+        
+    sitemap_content = (
+        '<?xml version="1.0" encoding="UTF-8"?>\n'
+        '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
+        + "\n".join(urls) +
+        '\n</urlset>\n'
+    )
+    
+    sitemap_path = BASE_DIR / "sitemap.xml"
+    sitemap_path.write_text(sitemap_content, encoding="utf-8")
+
+
 def main() -> None:
     feed_url = os.getenv("RSS_FEED_URL") or DEFAULT_FEED_URL
     today = dt.datetime.now(dt.UTC).replace(tzinfo=None)
@@ -371,8 +413,11 @@ def main() -> None:
     )
     INDEX_PATH.write_text(updated_index, encoding="utf-8")
 
+    generate_sitemap(today)
+
     print(f"Created: {output_filename}")
     print("Updated: index.html")
+    print("Generated: sitemap.xml")
     print("Headlines used:")
     for item in titles:
         print(f"- {item}")
