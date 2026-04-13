@@ -1,0 +1,370 @@
+<!doctype html>
+<html lang="en-US">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title><!-- PAGE_TITLE -->CentsBrief | AI-Powered Finance Briefs for US & UK<!-- /PAGE_TITLE --></title>
+  <meta name="description" content="<!-- PAGE_DESCRIPTION -->Daily market pulse, treasury/yield updates, and finance tools built for clear decision support.<!-- /PAGE_DESCRIPTION -->" />
+  <meta name="theme-color" content="#0f172a" />
+  <meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1" />
+  <link rel="canonical" href="<!-- CANONICAL_URL -->https://centsbrief.online/<!-- /CANONICAL_URL -->" />
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="CentsBrief.online" />
+  <meta property="og:title" content="<!-- OG_TITLE -->CentsBrief | AI-Powered Finance Briefs for US & UK<!-- /OG_TITLE -->" />
+  <meta property="og:description" content="<!-- OG_DESCRIPTION -->Automated financial news and practical tools with concise market context.<!-- /OG_DESCRIPTION -->" />
+  <meta property="og:url" content="<!-- OG_URL -->https://centsbrief.online/<!-- /OG_URL -->" />
+  <meta property="og:image" content="<!-- OG_IMAGE -->https://centsbrief.online/assets/og-home.jpg<!-- /OG_IMAGE -->" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="<!-- TWITTER_TITLE -->CentsBrief | AI-Powered Finance Briefs for US & UK<!-- /TWITTER_TITLE -->" />
+  <meta name="twitter:description" content="<!-- TWITTER_DESCRIPTION -->Market pulse and savings tools designed for clarity and speed.<!-- /TWITTER_DESCRIPTION -->" />
+  <meta name="twitter:image" content="<!-- TWITTER_IMAGE -->https://centsbrief.online/assets/og-home.jpg<!-- /TWITTER_IMAGE -->" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: { navy: "#0f172a", emerald: "#10b981", slatebg: "#f8fafc" },
+          fontFamily: { sans: ["Inter", "ui-sans-serif", "system-ui", "sans-serif"] }
+        }
+      }
+    };
+  </script>
+</head>
+<body class="bg-slatebg text-navy antialiased">
+  <div class="border-b border-slate-200 bg-white">
+    <div class="mx-auto flex w-full max-w-7xl flex-wrap gap-x-5 gap-y-1 px-4 py-2 text-xs text-slate-600 sm:px-6 lg:px-8">
+      <a href="about.html" class="hover:text-emerald">About Us</a>
+      <a href="legal.html#contact-us" class="hover:text-emerald">Contact</a>
+      <a href="legal.html#finance-disclaimer" class="hover:text-emerald">Disclaimer</a>
+      <a href="legal.html#cookie-policy" class="hover:text-emerald">Cookie Policy</a>
+      <a href="legal.html#privacy-policy" class="hover:text-emerald">Privacy</a>
+      <a href="legal.html#terms-of-service" class="hover:text-emerald">Terms</a>
+    </div>
+  </div>
+  <header class="fixed inset-x-0 top-0 z-50 border-b border-slate-200 bg-white/95 backdrop-blur">
+    <nav class="mx-auto flex w-full max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8" aria-label="Main navigation">
+      <a href="index.html" class="text-2xl font-extrabold tracking-tight text-navy">CentsBrief</a>
+      <div class="relative flex items-center gap-3">
+        <a href="calculator.html" class="rounded-md bg-emerald px-3 py-2 text-sm font-semibold text-white hover:bg-emerald-600">Tools</a>
+        <button id="menu-btn" class="rounded-md border border-slate-300 px-3 py-2 text-sm font-medium" aria-expanded="false" aria-controls="mobile-menu">Menu</button>
+        <div id="mobile-menu" class="absolute right-0 top-12 hidden w-52 rounded-lg border border-slate-200 bg-white p-2 shadow-lg">
+          <ul class="space-y-1 text-sm font-semibold">
+            <li><a class="block rounded px-3 py-2 transition hover:bg-slate-100 hover:text-emerald" href="index.html">Daily News</a></li>
+            <li><a class="block rounded px-3 py-2 transition hover:bg-slate-100 hover:text-emerald" href="calculator.html">Tools</a></li>
+            <li><a class="block rounded px-3 py-2 transition hover:bg-slate-100 hover:text-emerald" href="about.html">About Us</a></li>
+            <li><a class="block rounded px-3 py-2 transition hover:bg-slate-100 hover:text-emerald" href="legal.html">Legal</a></li>
+            <li><hr class="my-1 border-slate-200" /></li>
+            <li><a class="block rounded px-3 py-2 text-xs font-medium transition hover:bg-slate-100 hover:text-emerald" href="contact.html">Contact</a></li>
+            <li><a class="block rounded px-3 py-2 text-xs font-medium transition hover:bg-slate-100 hover:text-emerald" href="privacy-policy.html">Privacy Policy</a></li>
+            <li><a class="block rounded px-3 py-2 text-xs font-medium transition hover:bg-slate-100 hover:text-emerald" href="cookie-policy.html">Cookie Policy</a></li>
+            <li><a class="block rounded px-3 py-2 text-xs font-medium transition hover:bg-slate-100 hover:text-emerald" href="disclaimer.html">Disclaimer</a></li>
+            <li><a class="block rounded px-3 py-2 text-xs font-medium transition hover:bg-slate-100 hover:text-emerald" href="terms-of-service.html">Terms</a></li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+  </header>
+
+  <div class="pt-32 sm:pt-36"></div>
+
+  <div class="mx-auto w-full max-w-7xl px-4 pt-3 sm:px-6 lg:px-8">
+    <aside id="ad-leaderboard" class="mx-auto mb-6 flex w-full max-w-5xl flex-col items-center justify-center rounded-lg border border-slate-300 bg-slate-100 px-4 text-center">
+      <p class="pt-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-500">ADVERTISEMENT</p>
+      <div class="flex h-[50px] w-full items-center justify-center text-xs text-slate-500 sm:h-[90px]">
+        320x50 Mobile / 728x90 Desktop
+      </div>
+    </aside>
+  </div>
+
+  <main class="mx-auto w-full max-w-7xl px-4 pb-24 sm:px-6 lg:px-8">
+    <section id="today-brief" class="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200 sm:p-10">
+      <p class="text-xs font-semibold uppercase tracking-[0.2em] text-emerald">Market Pulse</p>
+      <h1 class="mt-3 text-3xl font-extrabold leading-tight sm:text-4xl lg:text-5xl">
+        <!-- HERO_HEADLINE -->Market Volatility Surges<!-- /HERO_HEADLINE -->
+      </h1>
+      <p class="mt-4 max-w-3xl text-base leading-relaxed text-slate-600">
+        <!-- HERO_SUMMARY -->The world of finance is abuzz with a mix of geopolitical tensions, unusual investment choices, and stock market fluctuations.<!-- /HERO_SUMMARY -->
+      </p>
+      <a href="brief-2026-04-13.html" class="mt-6 inline-flex items-center rounded-md bg-emerald px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-600">
+        <svg class="mr-2 h-4 w-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M3 10a.75.75 0 01.75-.75h10.69l-3.22-3.22a.75.75 0 111.06-1.06l4.5 4.5a.75.75 0 010 1.06l-4.5 4.5a.75.75 0 11-1.06-1.06l3.22-3.22H3.75A.75.75 0 013 10z" clip-rule="evenodd"/></svg>
+        View Full Brief
+      </a>
+    </section>
+
+    <section class="mt-10 rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200 sm:p-8" aria-labelledby="latest-briefs-heading">
+      <p class="text-xs font-semibold uppercase tracking-[0.2em] text-emerald">News Feed</p>
+      <h2 id="latest-briefs-heading" class="mb-5 mt-2 text-2xl font-bold tracking-tight">Latest Daily Briefs</h2>
+      <!-- RECENT_BRIEFS_START -->
+      <div class="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+        <article class="rounded-xl bg-white p-5 shadow-sm ring-1 ring-slate-200 transition hover:shadow-md">
+        <p class="text-xs font-semibold uppercase tracking-[0.14em] text-emerald">Apr 13, 2026</p>
+        <h3 class="mt-2 text-lg font-bold leading-snug">Market Volatility Surges</h3>
+        <p class="mt-3 text-sm leading-relaxed text-slate-600">The world of finance is abuzz with a mix of geopolitical tensions, unusual investment choices, and stock market fluctuations.</p>
+        <a href="brief-2026-04-13.html" class="mt-4 inline-block text-sm font-semibold text-emerald hover:underline">Read More</a>
+      </article>
+        <article class="rounded-xl bg-white p-5 shadow-sm ring-1 ring-slate-200 transition hover:shadow-md">
+        <p class="text-xs font-semibold uppercase tracking-[0.14em] text-emerald">Apr 12, 2026</p>
+        <h3 class="mt-2 text-lg font-bold leading-snug">5 Popular Vanguard ETFs Are Splitting Their Shares. Do You Own Any, and Should You Be Rejoicing?</h3>
+        <p class="mt-3 text-sm leading-relaxed text-slate-600">European equities opened cautious as bond markets repriced inflation risk into the next policy window. Rate-sensitive sectors moved first, with technology and real estate reacting to modest shifts in long-duration yields.</p>
+        <a href="brief-2026-04-12.html" class="mt-4 inline-block text-sm font-semibold text-emerald hover:underline">Read More</a>
+      </article>
+        <article class="rounded-xl bg-white p-5 shadow-sm ring-1 ring-slate-200 transition hover:shadow-md">
+        <p class="text-xs font-semibold uppercase tracking-[0.14em] text-emerald">Apr 11, 2026</p>
+        <h3 class="mt-2 text-lg font-bold leading-snug">Persian Gulf, Oil Outlooks Damp Wall Street Pre-Bell, Asia, Europe Off</h3>
+        <p class="mt-3 text-sm leading-relaxed text-slate-600">Rate-sensitive sectors moved first, with technology and real estate reacting to modest shifts in long-duration yields. Currency positioning remained active as traders reassessed divergence between Federal Reserve and Bank of England signaling.</p>
+        <a href="brief-2026-04-11.html" class="mt-4 inline-block text-sm font-semibold text-emerald hover:underline">Read More</a>
+      </article>
+        <article class="rounded-xl bg-white p-5 shadow-sm ring-1 ring-slate-200 transition hover:shadow-md">
+        <p class="text-xs font-semibold uppercase tracking-[0.14em] text-emerald">Apr 10, 2026</p>
+        <h3 class="mt-2 text-lg font-bold leading-snug">Jim Cramer Flags Overbought Stocks Amid Fragile Iran Truce As Wall Street Cheers: &#x27;Bulls Need To Pull In Their Horns A Little Bit&#x27;</h3>
+        <p class="mt-3 text-sm leading-relaxed text-slate-600">Currency positioning remained active as traders reassessed divergence between Federal Reserve and Bank of England signaling. Energy-linked moves influenced sentiment early, with oil direction feeding directly into inflation-sensitive pricing.</p>
+        <a href="brief-2026-04-10.html" class="mt-4 inline-block text-sm font-semibold text-emerald hover:underline">Read More</a>
+      </article>
+        <article class="rounded-xl bg-white p-5 shadow-sm ring-1 ring-slate-200 transition hover:shadow-md">
+        <p class="text-xs font-semibold uppercase tracking-[0.14em] text-emerald">Apr 09, 2026</p>
+        <h3 class="mt-2 text-lg font-bold leading-snug">Earnings live updates: Q1 earnings season kicks off with bank results as macro pressures mount</h3>
+        <p class="mt-3 text-sm leading-relaxed text-slate-600">Energy-linked moves influenced sentiment early, with oil direction feeding directly into inflation-sensitive pricing. Pre-market flow showed rotation into quality balance sheets, especially where cash generation remained resilient.</p>
+        <a href="brief-2026-04-09.html" class="mt-4 inline-block text-sm font-semibold text-emerald hover:underline">Read More</a>
+      </article>
+        <article class="rounded-xl bg-white p-5 shadow-sm ring-1 ring-slate-200 transition hover:shadow-md">
+        <p class="text-xs font-semibold uppercase tracking-[0.14em] text-emerald">Apr 08, 2026</p>
+        <h3 class="mt-2 text-lg font-bold leading-snug">S&amp;P 500 Index Dividend Yields Are Teasing All-Time Lows. Here Are 3 Dividend Darlings That Crush This Trend.</h3>
+        <p class="mt-3 text-sm leading-relaxed text-slate-600">Pre-market flow showed rotation into quality balance sheets, especially where cash generation remained resilient. US index futures traded in a tight range while investors digested mixed macro signals and commodity volatility.</p>
+        <a href="brief-2026-04-08.html" class="mt-4 inline-block text-sm font-semibold text-emerald hover:underline">Read More</a>
+      </article>
+        <article class="rounded-xl bg-white p-5 shadow-sm ring-1 ring-slate-200 transition hover:shadow-md">
+        <p class="text-xs font-semibold uppercase tracking-[0.14em] text-emerald">Apr 07, 2026</p>
+        <h3 class="mt-2 text-lg font-bold leading-snug">US Stock Market Today S&amp;P 500 Futures Slip As Inflation And Oil Jitters Build</h3>
+        <p class="mt-3 text-sm leading-relaxed text-slate-600">US index futures traded in a tight range while investors digested mixed macro signals and commodity volatility. European equities opened cautious as bond markets repriced inflation risk into the next policy window.</p>
+        <a href="brief-2026-04-07.html" class="mt-4 inline-block text-sm font-semibold text-emerald hover:underline">Read More</a>
+      </article>
+        <article class="rounded-xl bg-white p-5 shadow-sm ring-1 ring-slate-200 transition hover:shadow-md">
+        <p class="text-xs font-semibold uppercase tracking-[0.14em] text-emerald">Apr 06, 2026</p>
+        <h3 class="mt-2 text-lg font-bold leading-snug">Sandisk Stock Jumps. It’s Kicking This AI Software Victim Out of the Nasdaq 100.</h3>
+        <p class="mt-3 text-sm leading-relaxed text-slate-600">European equities opened cautious as bond markets repriced inflation risk into the next policy window. Rate-sensitive sectors moved first, with technology and real estate reacting to modest shifts in long-duration yields.</p>
+        <a href="brief-2026-04-06.html" class="mt-4 inline-block text-sm font-semibold text-emerald hover:underline">Read More</a>
+      </article>
+        <article class="rounded-xl bg-white p-5 shadow-sm ring-1 ring-slate-200 transition hover:shadow-md">
+        <p class="text-xs font-semibold uppercase tracking-[0.14em] text-emerald">Apr 05, 2026</p>
+        <h3 class="mt-2 text-lg font-bold leading-snug">Your next investment: million-dollar Pokémon cards &amp; rare whisky?</h3>
+        <p class="mt-3 text-sm leading-relaxed text-slate-600">Rate-sensitive sectors moved first, with technology and real estate reacting to modest shifts in long-duration yields. Currency positioning remained active as traders reassessed divergence between Federal Reserve and Bank of England signaling.</p>
+        <a href="brief-2026-04-05.html" class="mt-4 inline-block text-sm font-semibold text-emerald hover:underline">Read More</a>
+      </article>
+        <article class="rounded-xl bg-white p-5 shadow-sm ring-1 ring-slate-200 transition hover:shadow-md">
+        <p class="text-xs font-semibold uppercase tracking-[0.14em] text-emerald">Apr 04, 2026</p>
+        <h3 class="mt-2 text-lg font-bold leading-snug">Lockheed Martin Nails Historic Orion Splashdown With NASA, Paving Way for Moon Return</h3>
+        <p class="mt-3 text-sm leading-relaxed text-slate-600">Currency positioning remained active as traders reassessed divergence between Federal Reserve and Bank of England signaling. Energy-linked moves influenced sentiment early, with oil direction feeding directly into inflation-sensitive pricing.</p>
+        <a href="brief-2026-04-04.html" class="mt-4 inline-block text-sm font-semibold text-emerald hover:underline">Read More</a>
+      </article>
+        <article class="rounded-xl bg-white p-5 shadow-sm ring-1 ring-slate-200 transition hover:shadow-md">
+        <p class="text-xs font-semibold uppercase tracking-[0.14em] text-emerald">Apr 03, 2026</p>
+        <h3 class="mt-2 text-lg font-bold leading-snug">Intel’s $100 Billion April Rally Makes It Market’s Hottest Stock</h3>
+        <p class="mt-3 text-sm leading-relaxed text-slate-600">Energy-linked moves influenced sentiment early, with oil direction feeding directly into inflation-sensitive pricing. Pre-market flow showed rotation into quality balance sheets, especially where cash generation remained resilient.</p>
+        <a href="brief-2026-04-03.html" class="mt-4 inline-block text-sm font-semibold text-emerald hover:underline">Read More</a>
+      </article>
+        <article class="rounded-xl bg-white p-5 shadow-sm ring-1 ring-slate-200 transition hover:shadow-md">
+        <p class="text-xs font-semibold uppercase tracking-[0.14em] text-emerald">Apr 02, 2026</p>
+        <h3 class="mt-2 text-lg font-bold leading-snug">Morgan Stanley Says Earnings Shield S&amp;P 500 From Iran War</h3>
+        <p class="mt-3 text-sm leading-relaxed text-slate-600">Pre-market flow showed rotation into quality balance sheets, especially where cash generation remained resilient. US index futures traded in a tight range while investors digested mixed macro signals and commodity volatility.</p>
+        <a href="brief-2026-04-02.html" class="mt-4 inline-block text-sm font-semibold text-emerald hover:underline">Read More</a>
+      </article>
+        <article class="rounded-xl bg-white p-5 shadow-sm ring-1 ring-slate-200 transition hover:shadow-md">
+        <p class="text-xs font-semibold uppercase tracking-[0.14em] text-emerald">Apr 01, 2026</p>
+        <h3 class="mt-2 text-lg font-bold leading-snug">Why $1 Million Is the Worst Amount of Money and What to Do About It</h3>
+        <p class="mt-3 text-sm leading-relaxed text-slate-600">US index futures traded in a tight range while investors digested mixed macro signals and commodity volatility. European equities opened cautious as bond markets repriced inflation risk into the next policy window.</p>
+        <a href="brief-2026-04-01.html" class="mt-4 inline-block text-sm font-semibold text-emerald hover:underline">Read More</a>
+      </article>
+        <article class="rounded-xl bg-white p-5 shadow-sm ring-1 ring-slate-200 transition hover:shadow-md">
+        <p class="text-xs font-semibold uppercase tracking-[0.14em] text-emerald">Mar 31, 2026</p>
+        <h3 class="mt-2 text-lg font-bold leading-snug">Stock Market News for Apr 13, 2026</h3>
+        <p class="mt-3 text-sm leading-relaxed text-slate-600">European equities opened cautious as bond markets repriced inflation risk into the next policy window. Rate-sensitive sectors moved first, with technology and real estate reacting to modest shifts in long-duration yields.</p>
+        <a href="brief-2026-03-31.html" class="mt-4 inline-block text-sm font-semibold text-emerald hover:underline">Read More</a>
+      </article>
+        <article class="rounded-xl bg-white p-5 shadow-sm ring-1 ring-slate-200 transition hover:shadow-md">
+        <p class="text-xs font-semibold uppercase tracking-[0.14em] text-emerald">Mar 30, 2026</p>
+        <h3 class="mt-2 text-lg font-bold leading-snug">Zacks.com featured highlights include Strategic Education, Arrow Electronics, PG&amp;E and NatWest</h3>
+        <p class="mt-3 text-sm leading-relaxed text-slate-600">Rate-sensitive sectors moved first, with technology and real estate reacting to modest shifts in long-duration yields. Currency positioning remained active as traders reassessed divergence between Federal Reserve and Bank of England signaling.</p>
+        <a href="brief-2026-03-30.html" class="mt-4 inline-block text-sm font-semibold text-emerald hover:underline">Read More</a>
+      </article>
+        <article class="rounded-xl bg-white p-5 shadow-sm ring-1 ring-slate-200 transition hover:shadow-md">
+        <p class="text-xs font-semibold uppercase tracking-[0.14em] text-emerald">Mar 29, 2026</p>
+        <h3 class="mt-2 text-lg font-bold leading-snug">Shell and BP shares lifted as oil rebounds on breakdown of US-Iran peace talks</h3>
+        <p class="mt-3 text-sm leading-relaxed text-slate-600">Currency positioning remained active as traders reassessed divergence between Federal Reserve and Bank of England signaling. Energy-linked moves influenced sentiment early, with oil direction feeding directly into inflation-sensitive pricing.</p>
+        <a href="brief-2026-03-29.html" class="mt-4 inline-block text-sm font-semibold text-emerald hover:underline">Read More</a>
+      </article>
+        <article class="rounded-xl bg-white p-5 shadow-sm ring-1 ring-slate-200 transition hover:shadow-md">
+        <p class="text-xs font-semibold uppercase tracking-[0.14em] text-emerald">Mar 28, 2026</p>
+        <h3 class="mt-2 text-lg font-bold leading-snug">The Federal Reserve&#x27;s April Inflation Forecast Is In -- and It Just Keeps Getting Worse for Wall Street</h3>
+        <p class="mt-3 text-sm leading-relaxed text-slate-600">Energy-linked moves influenced sentiment early, with oil direction feeding directly into inflation-sensitive pricing. Pre-market flow showed rotation into quality balance sheets, especially where cash generation remained resilient.</p>
+        <a href="brief-2026-03-28.html" class="mt-4 inline-block text-sm font-semibold text-emerald hover:underline">Read More</a>
+      </article>
+        <article class="rounded-xl bg-white p-5 shadow-sm ring-1 ring-slate-200 transition hover:shadow-md">
+        <p class="text-xs font-semibold uppercase tracking-[0.14em] text-emerald">Mar 27, 2026</p>
+        <h3 class="mt-2 text-lg font-bold leading-snug">FTSE 100 LIVE: Stocks fall after US-Iran peace talks collapse</h3>
+        <p class="mt-3 text-sm leading-relaxed text-slate-600">Pre-market flow showed rotation into quality balance sheets, especially where cash generation remained resilient. US index futures traded in a tight range while investors digested mixed macro signals and commodity volatility.</p>
+        <a href="brief-2026-03-27.html" class="mt-4 inline-block text-sm font-semibold text-emerald hover:underline">Read More</a>
+      </article>
+        <article class="rounded-xl bg-white p-5 shadow-sm ring-1 ring-slate-200 transition hover:shadow-md">
+        <p class="text-xs font-semibold uppercase tracking-[0.14em] text-emerald">Mar 26, 2026</p>
+        <h3 class="mt-2 text-lg font-bold leading-snug">3 Restaurant Stocks That Fall Short</h3>
+        <p class="mt-3 text-sm leading-relaxed text-slate-600">US index futures traded in a tight range while investors digested mixed macro signals and commodity volatility. European equities opened cautious as bond markets repriced inflation risk into the next policy window.</p>
+        <a href="brief-2026-03-26.html" class="mt-4 inline-block text-sm font-semibold text-emerald hover:underline">Read More</a>
+      </article>
+        <article class="rounded-xl bg-white p-5 shadow-sm ring-1 ring-slate-200 transition hover:shadow-md">
+        <p class="text-xs font-semibold uppercase tracking-[0.14em] text-emerald">Mar 25, 2026</p>
+        <h3 class="mt-2 text-lg font-bold leading-snug">Stock Futures Dive, Oil Jumps as Trump’s Hormuz Blockade Rattles Markets</h3>
+        <p class="mt-3 text-sm leading-relaxed text-slate-600">European equities opened cautious as bond markets repriced inflation risk into the next policy window. Rate-sensitive sectors moved first, with technology and real estate reacting to modest shifts in long-duration yields.</p>
+        <a href="brief-2026-03-25.html" class="mt-4 inline-block text-sm font-semibold text-emerald hover:underline">Read More</a>
+      </article>
+        <article class="rounded-xl bg-white p-5 shadow-sm ring-1 ring-slate-200 transition hover:shadow-md">
+        <p class="text-xs font-semibold uppercase tracking-[0.14em] text-emerald">Mar 24, 2026</p>
+        <h3 class="mt-2 text-lg font-bold leading-snug">Goldman Sachs tops estimates on record equities trading, better-than-expected investment banking</h3>
+        <p class="mt-3 text-sm leading-relaxed text-slate-600">Rate-sensitive sectors moved first, with technology and real estate reacting to modest shifts in long-duration yields. Currency positioning remained active as traders reassessed divergence between Federal Reserve and Bank of England signaling.</p>
+        <a href="brief-2026-03-24.html" class="mt-4 inline-block text-sm font-semibold text-emerald hover:underline">Read More</a>
+      </article>
+        <article class="rounded-xl bg-white p-5 shadow-sm ring-1 ring-slate-200 transition hover:shadow-md">
+        <p class="text-xs font-semibold uppercase tracking-[0.14em] text-emerald">Mar 23, 2026</p>
+        <h3 class="mt-2 text-lg font-bold leading-snug">UK &#x27;not supporting&#x27; U.S. Iran blockade as France&#x27;s Macron confirms &#x27;multinational&#x27; talks on the Strait of Hormuz</h3>
+        <p class="mt-3 text-sm leading-relaxed text-slate-600">Currency positioning remained active as traders reassessed divergence between Federal Reserve and Bank of England signaling. Energy-linked moves influenced sentiment early, with oil direction feeding directly into inflation-sensitive pricing.</p>
+        <a href="brief-2026-03-23.html" class="mt-4 inline-block text-sm font-semibold text-emerald hover:underline">Read More</a>
+      </article>
+        <article class="rounded-xl bg-white p-5 shadow-sm ring-1 ring-slate-200 transition hover:shadow-md">
+        <p class="text-xs font-semibold uppercase tracking-[0.14em] text-emerald">Mar 22, 2026</p>
+        <h3 class="mt-2 text-lg font-bold leading-snug">Ineos Automotive: Startup backed by a knighted billionaire and soccer mogul wants to rekindle the rugged SUV market</h3>
+        <p class="mt-3 text-sm leading-relaxed text-slate-600">Energy-linked moves influenced sentiment early, with oil direction feeding directly into inflation-sensitive pricing. Pre-market flow showed rotation into quality balance sheets, especially where cash generation remained resilient.</p>
+        <a href="brief-2026-03-22.html" class="mt-4 inline-block text-sm font-semibold text-emerald hover:underline">Read More</a>
+      </article>
+        <article class="rounded-xl bg-white p-5 shadow-sm ring-1 ring-slate-200 transition hover:shadow-md">
+        <p class="text-xs font-semibold uppercase tracking-[0.14em] text-emerald">Mar 21, 2026</p>
+        <h3 class="mt-2 text-lg font-bold leading-snug">Trump blasts Pope Leo for criticism of U.S. foreign policy</h3>
+        <p class="mt-3 text-sm leading-relaxed text-slate-600">Pre-market flow showed rotation into quality balance sheets, especially where cash generation remained resilient. US index futures traded in a tight range while investors digested mixed macro signals and commodity volatility.</p>
+        <a href="brief-2026-03-21.html" class="mt-4 inline-block text-sm font-semibold text-emerald hover:underline">Read More</a>
+      </article>
+        <article class="rounded-xl bg-white p-5 shadow-sm ring-1 ring-slate-200 transition hover:shadow-md">
+        <p class="text-xs font-semibold uppercase tracking-[0.14em] text-emerald">Mar 20, 2026</p>
+        <h3 class="mt-2 text-lg font-bold leading-snug">Trump threatens 50% tariffs on China as report suggests plans for arms shipment to Iran</h3>
+        <p class="mt-3 text-sm leading-relaxed text-slate-600">US index futures traded in a tight range while investors digested mixed macro signals and commodity volatility. European equities opened cautious as bond markets repriced inflation risk into the next policy window.</p>
+        <a href="brief-2026-03-20.html" class="mt-4 inline-block text-sm font-semibold text-emerald hover:underline">Read More</a>
+      </article>
+        <article class="rounded-xl bg-white p-5 shadow-sm ring-1 ring-slate-200 transition hover:shadow-md">
+        <p class="text-xs font-semibold uppercase tracking-[0.14em] text-emerald">Mar 19, 2026</p>
+        <h3 class="mt-2 text-lg font-bold leading-snug">Eric Swalwell suspends campaign for California governor amid sexual misconduct allegations</h3>
+        <p class="mt-3 text-sm leading-relaxed text-slate-600">European equities opened cautious as bond markets repriced inflation risk into the next policy window. Rate-sensitive sectors moved first, with technology and real estate reacting to modest shifts in long-duration yields.</p>
+        <a href="brief-2026-03-19.html" class="mt-4 inline-block text-sm font-semibold text-emerald hover:underline">Read More</a>
+      </article>
+        <article class="rounded-xl bg-white p-5 shadow-sm ring-1 ring-slate-200 transition hover:shadow-md">
+        <p class="text-xs font-semibold uppercase tracking-[0.14em] text-emerald">Mar 18, 2026</p>
+        <h3 class="mt-2 text-lg font-bold leading-snug">Many Gen Z adults still get financial help from their parents</h3>
+        <p class="mt-3 text-sm leading-relaxed text-slate-600">Rate-sensitive sectors moved first, with technology and real estate reacting to modest shifts in long-duration yields. Currency positioning remained active as traders reassessed divergence between Federal Reserve and Bank of England signaling.</p>
+        <a href="brief-2026-03-18.html" class="mt-4 inline-block text-sm font-semibold text-emerald hover:underline">Read More</a>
+      </article>
+        <article class="rounded-xl bg-white p-5 shadow-sm ring-1 ring-slate-200 transition hover:shadow-md">
+        <p class="text-xs font-semibold uppercase tracking-[0.14em] text-emerald">Mar 17, 2026</p>
+        <h3 class="mt-2 text-lg font-bold leading-snug">Battles brew over in-state tuition for undocumented students</h3>
+        <p class="mt-3 text-sm leading-relaxed text-slate-600">Currency positioning remained active as traders reassessed divergence between Federal Reserve and Bank of England signaling. Energy-linked moves influenced sentiment early, with oil direction feeding directly into inflation-sensitive pricing.</p>
+        <a href="brief-2026-03-17.html" class="mt-4 inline-block text-sm font-semibold text-emerald hover:underline">Read More</a>
+      </article>
+        <article class="rounded-xl bg-white p-5 shadow-sm ring-1 ring-slate-200 transition hover:shadow-md">
+        <p class="text-xs font-semibold uppercase tracking-[0.14em] text-emerald">Mar 16, 2026</p>
+        <h3 class="mt-2 text-lg font-bold leading-snug">Berkshire electric utility&#x27;s court win could save it billions</h3>
+        <p class="mt-3 text-sm leading-relaxed text-slate-600">Energy-linked moves influenced sentiment early, with oil direction feeding directly into inflation-sensitive pricing. Pre-market flow showed rotation into quality balance sheets, especially where cash generation remained resilient.</p>
+        <a href="brief-2026-03-16.html" class="mt-4 inline-block text-sm font-semibold text-emerald hover:underline">Read More</a>
+      </article>
+        <article class="rounded-xl bg-white p-5 shadow-sm ring-1 ring-slate-200 transition hover:shadow-md">
+        <p class="text-xs font-semibold uppercase tracking-[0.14em] text-emerald">Mar 15, 2026</p>
+        <h3 class="mt-2 text-lg font-bold leading-snug">Why pressure is mounting at oil giant BP ahead of its annual general meeting</h3>
+        <p class="mt-3 text-sm leading-relaxed text-slate-600">Pre-market flow showed rotation into quality balance sheets, especially where cash generation remained resilient. US index futures traded in a tight range while investors digested mixed macro signals and commodity volatility.</p>
+        <a href="brief-2026-03-15.html" class="mt-4 inline-block text-sm font-semibold text-emerald hover:underline">Read More</a>
+      </article>
+      </div>
+      <!-- RECENT_BRIEFS_END -->
+    </section>
+  </main>
+
+  <aside id="ad-sticky-footer" class="fixed bottom-0 left-0 right-0 z-40 mx-auto flex w-full items-center justify-center border-t border-slate-300 bg-slate-100 px-4 py-2 shadow-[0_-4px_20px_rgba(15,23,42,0.10)]">
+    <div class="flex w-full max-w-5xl flex-col items-center justify-center rounded-md border border-slate-300 bg-slate-100">
+      <p class="pt-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-500">ADVERTISEMENT</p>
+      <div class="flex h-[50px] w-full items-center justify-center text-xs text-slate-500">Sticky mobile/footer unit</div>
+    </div>
+  </aside>
+
+  <footer class="bg-navy pb-24 pt-10 text-slate-200">
+    <div class="mx-auto grid w-full max-w-7xl gap-10 px-4 sm:px-6 lg:grid-cols-2 lg:px-8">
+      <section>
+        <h2 class="text-2xl font-extrabold">CentsBrief</h2>
+        <p class="mt-3 max-w-md text-sm leading-relaxed text-slate-300">
+          Automated financial briefings for US and UK readers focused on clarity, transparency, and practical market context.
+        </p>
+        <p class="mt-6 border-t border-slate-700 pt-4 text-sm leading-relaxed text-slate-300">
+          Disclaimer: CentsBrief.online provides automated financial data and news summaries for educational purposes only. We are not licensed financial advisors. Always conduct independent research before making financial decisions.
+        </p>
+      </section>
+      <section>
+        <h3 class="text-sm font-semibold uppercase tracking-[0.2em] text-slate-400">Pages</h3>
+        <div class="mt-4 grid grid-cols-2 gap-x-6 gap-y-2 text-sm">
+          <a href="#today-brief" class="hover:text-emerald">Today Brief</a>
+          <a href="#latest-briefs-heading" class="hover:text-emerald">Latest Briefs</a>
+          <a href="calculator.html" class="hover:text-emerald">Calculator</a>
+          <a href="about.html" class="hover:text-emerald">About Us</a>
+          <a href="contact.html" class="hover:text-emerald">Contact</a>
+          <a href="privacy-policy.html" class="hover:text-emerald">Privacy Policy</a>
+          <a href="cookie-policy.html" class="hover:text-emerald">Cookie Policy</a>
+          <a href="disclaimer.html" class="hover:text-emerald">Disclaimer</a>
+          <a href="terms-of-service.html" class="hover:text-emerald">Terms</a>
+          <a href="legal.html" class="hover:text-emerald">Legal Hub</a>
+        </div>
+      </section>
+    </div>
+    <div class="mx-auto mt-8 w-full max-w-7xl border-t border-slate-800 px-4 pt-5 text-xs text-slate-400 sm:px-6 lg:px-8">
+      © <span id="year"></span> CentsBrief.online. All rights reserved.
+    </div>
+  </footer>
+
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "CentsBrief.online",
+      "url": "https://centsbrief.online/",
+      "logo": "https://centsbrief.online/assets/logo-512.png",
+      "description": "Automated financial news briefs and practical finance tools for US and UK readers.",
+      "sameAs": []
+    }
+  </script>
+
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "CentsBrief.online",
+      "url": "https://centsbrief.online/",
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": "https://centsbrief.online/search?q={search_term_string}",
+        "query-input": "required name=search_term_string"
+      }
+    }
+  </script>
+
+  <script>
+    const menuBtn = document.getElementById("menu-btn");
+    const mobileMenu = document.getElementById("mobile-menu");
+    menuBtn.addEventListener("click", (event) => {
+      event.stopPropagation();
+      const isHidden = mobileMenu.classList.toggle("hidden");
+      menuBtn.setAttribute("aria-expanded", String(!isHidden));
+    });
+    document.addEventListener("click", (event) => {
+      const target = event.target;
+      if (!mobileMenu.contains(target) && target !== menuBtn) {
+        mobileMenu.classList.add("hidden");
+        menuBtn.setAttribute("aria-expanded", "false");
+      }
+    });
+    document.getElementById("year").textContent = new Date().getFullYear();
+  </script>
+</body>
+</html>

@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="en-US">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>High-Yield Savings Calculator | CentsBrief</title>
+  <meta name="description" content="Estimate APY growth with CentsBrief's high-yield savings calculator for US and UK savers." />
+  <meta name="theme-color" content="#0f172a" />
+  <meta name="robots" content="index,follow" />
+  <link rel="canonical" href="https://centsbrief.online/calculator.html" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: { navy: "#0f172a", emerald: "#10b981", slatebg: "#f8fafc" },
+          fontFamily: { sans: ["Inter", "ui-sans-serif", "system-ui", "sans-serif"] }
+        }
+      }
+    };
+  </script>
+</head>
+<body class="bg-slatebg text-navy antialiased">
+  <header class="fixed inset-x-0 top-0 z-50 border-b border-slate-200 bg-white/95 backdrop-blur">
+    <nav class="mx-auto flex w-full max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
+      <a href="index.html" class="text-2xl font-extrabold tracking-tight">CentsBrief</a>
+      <ul class="hidden items-center gap-7 text-sm font-semibold md:flex">
+        <li><a class="hover:text-emerald" href="index.html">Daily News</a></li>
+        <li><a class="text-emerald" href="calculator.html">Tools</a></li>
+        <li><a class="hover:text-emerald" href="about.html">About</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <div class="pt-24 sm:pt-28"></div>
+
+  <div class="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
+    <aside id="ad-leaderboard" class="mx-auto mb-6 flex w-full max-w-5xl flex-col items-center justify-center rounded-lg border border-slate-300 bg-slate-100 px-4 text-center">
+      <p class="pt-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-500">ADVERTISEMENT</p>
+      <div class="flex h-[50px] w-full items-center justify-center text-xs text-slate-500 sm:h-[90px]">320x50 Mobile / 728x90 Desktop</div>
+    </aside>
+  </div>
+
+  <main class="mx-auto w-full max-w-4xl px-4 pb-24 sm:px-6 lg:px-8">
+    <section class="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200 sm:p-8">
+      <h1 class="text-3xl font-extrabold sm:text-4xl">High-Yield Savings Calculator</h1>
+      <p class="mt-3 text-slate-600">Project compound growth and monthly contributions across your savings horizon.</p>
+
+      <form id="savings-form" class="mt-8 grid gap-5 sm:grid-cols-2">
+        <label class="block">
+          <span class="mb-2 block text-sm font-semibold">Initial Deposit (USD/GBP)</span>
+          <input id="principal" type="text" inputmode="decimal" autocomplete="off" placeholder="e.g. 10000" class="w-full rounded-lg border border-slate-300 px-4 py-3 outline-none ring-emerald focus:ring-2" />
+        </label>
+        <label class="block">
+          <span class="mb-2 block text-sm font-semibold">Annual Interest Rate (%)</span>
+          <input id="rate" type="text" inputmode="decimal" autocomplete="off" placeholder="e.g. 4.75" class="w-full rounded-lg border border-slate-300 px-4 py-3 outline-none ring-emerald focus:ring-2" />
+        </label>
+        <label class="block">
+          <span class="mb-2 block text-sm font-semibold">Monthly Contribution</span>
+          <input id="monthly" type="text" inputmode="decimal" autocomplete="off" placeholder="e.g. 500" class="w-full rounded-lg border border-slate-300 px-4 py-3 outline-none ring-emerald focus:ring-2" />
+        </label>
+        <label class="block">
+          <span class="mb-2 block text-sm font-semibold">Years to Save</span>
+          <input id="years" type="text" inputmode="numeric" autocomplete="off" placeholder="e.g. 5" class="w-full rounded-lg border border-slate-300 px-4 py-3 outline-none ring-emerald focus:ring-2" />
+        </label>
+        <button type="submit" class="sm:col-span-2 inline-flex items-center justify-center rounded-lg bg-emerald px-5 py-3 text-sm font-semibold text-white hover:bg-emerald-600">
+          <svg class="mr-2 h-4 w-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M5.5 2A1.5 1.5 0 004 3.5v13A1.5 1.5 0 005.5 18h9a1.5 1.5 0 001.5-1.5v-13A1.5 1.5 0 0014.5 2h-9zM6 6.75A.75.75 0 016.75 6h6.5a.75.75 0 010 1.5h-6.5A.75.75 0 016 6.75zM7 11a1 1 0 100 2 1 1 0 000-2zm3 0a1 1 0 100 2 1 1 0 000-2zm3 0a1 1 0 100 2 1 1 0 000-2zm-6 3a1 1 0 100 2 1 1 0 000-2zm3 0a1 1 0 100 2 1 1 0 000-2zm3 0a1 1 0 100 2 1 1 0 000-2z"/></svg>
+          Calculate Growth
+        </button>
+      </form>
+
+      <section class="mt-8 rounded-xl border border-slate-200 bg-slate-50 p-5" aria-live="polite">
+        <h2 class="text-xl font-bold">Results</h2>
+        <div class="mt-4 grid gap-3 sm:grid-cols-3">
+          <p class="rounded-lg bg-white p-4"><span class="block text-xs uppercase tracking-wide text-slate-500">Final Balance</span><strong id="final-balance" class="mt-1 block text-xl text-navy">$0.00</strong></p>
+          <p class="rounded-lg bg-white p-4"><span class="block text-xs uppercase tracking-wide text-slate-500">Total Contributions</span><strong id="total-contributions" class="mt-1 block text-xl text-navy">$0.00</strong></p>
+          <p class="rounded-lg bg-white p-4"><span class="block text-xs uppercase tracking-wide text-slate-500">Interest Earned</span><strong id="interest-earned" class="mt-1 block text-xl text-emerald">$0.00</strong></p>
+        </div>
+      </section>
+    </section>
+  </main>
+
+  <aside id="ad-sticky-footer" class="fixed bottom-0 left-0 right-0 z-40 mx-auto flex w-full items-center justify-center border-t border-slate-300 bg-slate-100 px-4 py-2">
+    <div class="flex w-full max-w-5xl flex-col items-center justify-center rounded-md border border-slate-300 bg-slate-100">
+      <p class="pt-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-500">ADVERTISEMENT</p>
+      <div class="flex h-[50px] w-full items-center justify-center text-xs text-slate-500">Sticky mobile/footer unit</div>
+    </div>
+  </aside>
+
+  <footer class="bg-navy pb-24 pt-10 text-slate-200">
+    <div class="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
+      <div class="flex flex-wrap items-center gap-5 text-sm font-medium">
+        <a href="legal.html#privacy-policy" class="hover:text-emerald">Privacy Policy</a>
+        <a href="legal.html#terms-of-service" class="hover:text-emerald">Terms of Service</a>
+        <a href="legal.html#contact-us" class="hover:text-emerald">Contact Us</a>
+      </div>
+      <p class="mt-6 border-t border-slate-700 pt-4 text-sm leading-relaxed text-slate-300">Disclaimer: CentsBrief.online provides automated financial data and news summaries for educational purposes only. We are not licensed financial advisors. Always conduct independent research before making financial decisions.</p>
+      <p class="mt-6 text-xs text-slate-400">© <span id="year"></span> CentsBrief.online. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "FinancialProduct",
+      "name": "High-Yield Savings Calculator",
+      "description": "Interactive finance tool for projecting APY growth and contribution outcomes.",
+      "provider": {
+        "@type": "Organization",
+        "name": "CentsBrief.online",
+        "url": "https://centsbrief.online/"
+      },
+      "url": "https://centsbrief.online/calculator.html"
+    }
+  </script>
+
+  <script>
+    const form = document.getElementById("savings-form");
+    const currency = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" });
+
+    function calculateSavings(principal, annualRate, monthlyContribution, years) {
+      const monthlyRate = annualRate / 100 / 12;
+      const months = years * 12;
+      let balance = principal;
+      let contributions = principal;
+
+      for (let i = 0; i < months; i += 1) {
+        balance = balance * (1 + monthlyRate) + monthlyContribution;
+        contributions += monthlyContribution;
+      }
+
+      return { balance, contributions, interest: balance - contributions };
+    }
+
+    function sanitizeNumericInput(raw, integerOnly = false) {
+      const cleaned = String(raw || "").replace(/[^\d.]/g, "");
+      if (!cleaned) return 0;
+      const normalized = integerOnly ? cleaned.replace(/\..*/g, "") : cleaned;
+      const value = Number(normalized);
+      return Number.isFinite(value) ? value : 0;
+    }
+
+    function render() {
+      const principal = sanitizeNumericInput(document.getElementById("principal").value);
+      const rate = sanitizeNumericInput(document.getElementById("rate").value);
+      const monthly = sanitizeNumericInput(document.getElementById("monthly").value);
+      const years = sanitizeNumericInput(document.getElementById("years").value, true);
+      const result = calculateSavings(principal, rate, monthly, years);
+
+      document.getElementById("final-balance").textContent = currency.format(result.balance);
+      document.getElementById("total-contributions").textContent = currency.format(result.contributions);
+      document.getElementById("interest-earned").textContent = currency.format(result.interest);
+    }
+
+    form.addEventListener("submit", (event) => {
+      event.preventDefault();
+      render();
+    });
+
+    ["principal", "rate", "monthly", "years"].forEach((id) => {
+      const input = document.getElementById(id);
+      input.addEventListener("input", () => {
+        const integerOnly = id === "years";
+        input.value = integerOnly
+          ? input.value.replace(/[^\d]/g, "")
+          : input.value.replace(/[^\d.]/g, "");
+      });
+    });
+
+    render();
+    document.getElementById("year").textContent = new Date().getFullYear();
+  </script>
+</body>
+</html>
