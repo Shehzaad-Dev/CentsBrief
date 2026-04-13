@@ -1,5 +1,6 @@
 import datetime as dt
 import html
+import json
 import os
 import re
 from pathlib import Path
@@ -213,6 +214,96 @@ def extract_lede_from_brief_text(brief_text: str) -> str:
     return lede[:260]
 
 
+def minify_html(content: str) -> str:
+    # Remove HTML comments BUT preserve the structural markers the script needs for future runs
+    # Markers like <!-- RECENT_BRIEFS_START --> or <!-- HERO_HEADLINE -->
+    content = re.sub(r"<!--\s*(?!(?:RECENT_BRIEFS|HERO_HEADLINE|HERO_SUMMARY|ARTICLE|CANONICAL|JSON_LD|LAST_UPDATED|RELATED_INSIGHTS|SNAPSHOT|MODIFIED|PUBLISHED)).*?-->", "", content, flags=re.DOTALL)
+    # Remove whitespace between tags
+    content = re.sub(r">\s+<", "><", content)
+    return content.strip()
+
+
+def generate_robots_txt() -> None:
+    content = (
+        "User-agent: *\n"
+        "Allow: /\n"
+        f"Sitemap: {SITE_BASE_URL}/sitemap.xml\n"
+    )
+    (BASE_DIR / "robots.txt").write_text(content, encoding="utf-8")
+
+
+def get_related_insights(today: dt.datetime) -> str:
+    briefs = []
+    for path in BASE_DIR.glob("brief-????-??-??.html"):
+        date_str = path.stem.replace("brief-", "")
+        if date_str == today.strftime("%Y-%m-%d"):
+            continue
+        try:
+            brief_date = dt.datetime.strptime(date_str, "%Y-%m-%d")
+            briefs.append((brief_date, path.stem))
+        except ValueError:
+            continue
+
+    briefs.sort(key=lambda x: x[0], reverse=True)
+    targets = briefs[:3]
+
+    if not targets:
+        return ""
+
+    links = []
+    for _, slug in targets:
+        headline = slug.replace("-", " ").title()
+        try:
+            file_content = (BASE_DIR / f"{slug}.html").read_text(encoding="utf-8")
+            match = re.search(r"<!-- ARTICLE_HEADLINE -->(.*?)<!-- /ARTICLE_HEADLINE -->", file_content, re.DOTALL)
+            if match:
+                headline = match.group(1).strip()
+        except:
+            pass
+        links.append(f'<li><a href="{slug}" class="text-emerald font-semibold hover:underline">{headline}</a></li>')
+
+    return f"""
+      <section class="mt-12 border-t border-slate-100 pt-8">
+        <h3 class="text-xl font-extrabold text-navy">Related Market Insights</h3>
+        <ul class="mt-4 space-y-3 list-disc pl-5">
+          {"\n          ".join(links)}
+        </ul>
+      </section>
+    """
+
+
+def generate_json_ld(headline: str, summary: str, brief_text: str, publish_date: dt.datetime, canonical_url: str) -> str:
+    published_iso = publish_date.strftime("%Y-%m-%dT%H:%M:%SZ")
+    desc = (summary if len(summary) > 40 else brief_text[:200]).strip()
+    desc = re.sub(r"<[^>]+>", "", desc)  # strip any html
+    desc = re.sub(r"##\s+", "", desc).replace("\n", " ")[:160].strip() + "..."
+
+    schema = {
+        "@context": "https://schema.org",
+        "@type": "FinancialNewsArticle",
+        "mainEntityOfPage": {"@type": "WebPage", "@id": canonical_url},
+        "headline": headline,
+        "description": desc,
+        "image": [f"{SITE_BASE_URL}/assets/og-default.jpg"],
+        "datePublished": published_iso,
+        "dateModified": published_iso,
+        "author": {
+            "@id": f"{SITE_BASE_URL}/#insight-team",
+            "@type": "Organization",
+            "name": "CentsBrief Market Insight Team",
+        },
+        "publisher": {
+            "@type": "Organization",
+            "name": "CentsBrief.online",
+            "logo": {"@type": "ImageObject", "url": f"{SITE_BASE_URL}/assets/logo-512.png"},
+        },
+        "articleSection": "Markets",
+        "inLanguage": "en-US",
+        "isAccessibleForFree": True,
+    }
+    return f'<script type="application/ld+json">\n{json.dumps(schema, indent=2)}\n</script>'
+
+
 def update_article_from_template(
     template_content: str,
     headline: str,
@@ -228,10 +319,14 @@ def update_article_from_template(
     canonical_url = f"{SITE_BASE_URL}/{clean_filename}"
     read_time = f"{max(4, round(TARGET_WORD_COUNT / 220))} min read"
 
+    json_ld = generate_json_ld(headline, summary, brief_html, publish_date, canonical_url)
+    related_html = get_related_insights(publish_date)
+
     article_html = template_content
     article_html = replace_marker(article_html, "ARTICLE_TITLE", f"{headline} | CentsBrief")
     article_html = replace_marker(article_html, "ARTICLE_DESCRIPTION", summary)
     article_html = replace_marker(article_html, "CANONICAL_URL", canonical_url)
+    article_html = replace_marker(article_html, "JSON_LD_SCHEMA", json_ld)
     article_html = replace_marker(article_html, "OG_TITLE", f"{headline} | CentsBrief")
     article_html = replace_marker(article_html, "OG_DESCRIPTION", summary)
     article_html = replace_marker(article_html, "OG_URL", canonical_url)
@@ -243,9 +338,11 @@ def update_article_from_template(
     article_html = replace_marker(article_html, "ARTICLE_LEDE", lede)
     article_html = replace_marker(article_html, "ARTICLE_AUTHOR", "CentsBrief Market Insight Team")
     article_html = replace_marker(article_html, "PUBLISHED_HUMAN", published_human)
+    article_html = replace_marker(article_html, "LAST_UPDATED", "05:00 UTC")
     article_html = replace_marker(article_html, "READ_TIME", read_time)
     article_html = replace_marker(article_html, "ARTICLE_CONTENT_START", "ARTICLE_CONTENT_START")
     article_html = replace_marker(article_html, "ARTICLE_CONTENT_END", "ARTICLE_CONTENT_END")
+    article_html = replace_marker(article_html, "RELATED_INSIGHTS", related_html)
 
     article_html = re.sub(
         r"(<!--\s*ARTICLE_CONTENT_START\s*-->)(.*?)(<!--\s*ARTICLE_CONTENT_END\s*-->)",
@@ -253,7 +350,7 @@ def update_article_from_template(
         article_html,
         flags=re.DOTALL,
     )
-    return article_html
+    return minify_html(article_html)
 
 
 def build_brief_card(headline: str, lede: str, output_filename: str, publish_date: dt.datetime) -> str:
@@ -411,13 +508,14 @@ def main() -> None:
         output_filename=output_filename,
         publish_date=today,
     )
-    INDEX_PATH.write_text(updated_index, encoding="utf-8")
+    INDEX_PATH.write_text(minify_html(updated_index), encoding="utf-8")
 
     generate_sitemap(today)
+    generate_robots_txt()
 
     print(f"Created: {output_filename}")
     print("Updated: index.html")
-    print("Generated: sitemap.xml")
+    print("Generated: sitemap.xml & robots.txt")
     print("Headlines used:")
     for item in titles:
         print(f"- {item}")

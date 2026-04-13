@@ -7,6 +7,7 @@
   <meta name="description" content="<!-- ARTICLE_DESCRIPTION -->Automated financial news summary and market context for US and UK readers.<!-- /ARTICLE_DESCRIPTION -->" />
   <meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1" />
   <link rel="canonical" href="<!-- CANONICAL_URL -->https://centsbreif.online/article-slug<!-- /CANONICAL_URL -->" />
+  <!-- JSON_LD_SCHEMA -->
   <meta name="theme-color" content="#0f172a" />
 
   <meta property="og:type" content="article" />
@@ -72,6 +73,8 @@
           <span aria-hidden="true">•</span>
           <time datetime="<!-- PUBLISHED_ISO -->2026-04-13T08:00:00Z<!-- /PUBLISHED_ISO -->"><!-- PUBLISHED_HUMAN -->April 13, 2026<!-- /PUBLISHED_HUMAN --></time>
           <span aria-hidden="true">•</span>
+          <span>Last Updated: <!-- LAST_UPDATED -->05:00 UTC<!-- /LAST_UPDATED --></span>
+          <span aria-hidden="true">•</span>
           <span><!-- READ_TIME -->4 min read<!-- /READ_TIME --></span>
         </div>
         <p class="mt-5 rounded-lg border-l-4 border-emerald bg-emerald/5 px-4 py-3 text-sm leading-relaxed text-slate-700 sm:text-base">
@@ -88,6 +91,8 @@
         <p>Traders are monitoring US inflation releases, UK wage growth updates, and treasury auction demand. A sustained move in real yields may set the tone for both risk assets and valuation-sensitive sectors.</p>
         <!-- ARTICLE_CONTENT_END -->
       </section>
+
+      <!-- RELATED_INSIGHTS -->
       <section class="mt-10 rounded-xl border border-slate-200 bg-slate-50 p-5">
         <h2 class="text-lg font-bold">Market Snapshot</h2>
         <ul class="mt-4 space-y-2 text-sm text-slate-700">
@@ -124,6 +129,7 @@
           <a href="disclaimer.html" class="hover:text-emerald">Disclaimer</a>
           <a href="terms-of-service.html" class="hover:text-emerald">Terms</a>
           <a href="legal.html" class="hover:text-emerald">Legal Hub</a>
+          <a href="editorial-policy.html" class="hover:text-emerald">Editorial Policy</a>
         </div>
       </section>
     </div>
@@ -132,43 +138,7 @@
     </div>
   </footer>
 
-  <script type="application/ld+json">
-    {
-      "@context": "https://schema.org",
-      "@type": "NewsArticle",
-      "mainEntityOfPage": { "@type": "WebPage", "@id": "https://centsbreif.online/article-slug" },
-      "headline": "US & UK Markets Open Mixed as Inflation Expectations Reprice",
-      "description": "Automated financial news summary and market context for US and UK readers.",
-      "image": ["https://centsbreif.online/assets/og-default.jpg"],
-      "datePublished": "2026-04-13T08:00:00Z",
-      "dateModified": "2026-04-13T08:00:00Z",
-      "author": { "@type": "Organization", "name": "CentsBrief Market Insight Team" },
-      "publisher": {
-        "@type": "Organization",
-        "name": "CentsBrief.online",
-        "logo": { "@type": "ImageObject", "url": "https://centsbreif.online/assets/logo-512.png" }
-      },
-      "articleSection": "Markets",
-      "inLanguage": "en-US",
-      "isAccessibleForFree": true
-    }
-  </script>
-
-  <script type="application/ld+json">
-    {
-      "@context": "https://schema.org",
-      "@type": "FinancialProduct",
-      "name": "CentsBrief Market Brief",
-      "description": "Automated market brief focused on yields, rates, and savings context for US and UK audiences.",
-      "provider": {
-        "@type": "Organization",
-        "name": "CentsBrief.online",
-        "url": "https://centsbreif.online/"
-      },
-      "audience": { "@type": "Audience", "geographicArea": ["US", "UK"] },
-      "url": "https://centsbreif.online/article-slug"
-    }
-  </script>
+  <!-- /JSON_LD_SCHEMA -->
 
   <script>
     const articleBody = document.getElementById("article-body");
