@@ -41,8 +41,10 @@ jobs:
           if [[ -n "$(git status --porcelain)" ]]; then
             git config user.name "github-actions[bot]"
             git config user.email "github-actions[bot]@users.noreply.github.com"
-            git add index.html brief-*.html
-            git commit -m "chore: publish daily automated finance brief"
+            git add --all index.html brief-*.html
+            # Add deleted files manually based on pattern since bash might not expand deleted files to add
+            git ls-files --deleted | grep "brief-" | xargs -r git rm
+            git commit -m "chore: publish daily automated finance brief and clean up archive"
             git push
           else
             echo "No changes detected."

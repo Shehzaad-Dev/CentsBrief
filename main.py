@@ -241,7 +241,7 @@ def update_article_from_template(
     article_html = replace_marker(article_html, "MODIFIED_ISO", published_iso)
     article_html = replace_marker(article_html, "ARTICLE_HEADLINE", headline)
     article_html = replace_marker(article_html, "ARTICLE_LEDE", lede)
-    article_html = replace_marker(article_html, "ARTICLE_AUTHOR", "CentsBrief Automation Desk")
+    article_html = replace_marker(article_html, "ARTICLE_AUTHOR", "CentsBrief Market Insight Team")
     article_html = replace_marker(article_html, "PUBLISHED_HUMAN", published_human)
     article_html = replace_marker(article_html, "READ_TIME", read_time)
     article_html = replace_marker(article_html, "ARTICLE_CONTENT_START", "ARTICLE_CONTENT_START")
