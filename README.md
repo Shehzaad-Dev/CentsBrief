@@ -1,102 +1,70 @@
-# CentsBrief.online - Full Live Setup (PC Can Stay Off)
+# CentsBrief.online - Automated Financial AI Platform
 
-This guide sets up your site so:
-- it stays live 24/7 on your domain,
-- AI publishes a new brief daily automatically,
-- and your PC can be OFF.
+**Live Site:** [https://centsbreif.online/](https://centsbreif.online/)
 
-The automation runs on a VPS server, not your local machine.
+CentsBrief is a fully automated, AI-powered financial briefing platform designed for US and UK audiences. It transforms highly complex market data into accessible, practical, and highly readable daily updates for retail investors and households without financial jargon.
 
----
-
-## 1) What your project already does
-
-- Generates a daily AI finance brief from US/UK market headlines (`main.py`)
-- Builds structured 1000-word-style articles with headings
-- Updates homepage with latest brief first
-- Inserts monetization ad containers
-- Deletes old brief pages automatically (default retention: 60 days)
+This repository holds the entire static site frontend, as well as the backend automation script (`main.py`) which orchestrates the autonomous daily publishing. 
 
 ---
 
-## 2) Requirements
+## 🚀 Key Features
 
-1. Domain name (e.g. `centsbreif.online`)
-2. Linux VPS (Ubuntu 22.04+ recommended)
-3. Groq API key
-4. Your project files uploaded to server
-
----
-
-## 3) One-time server setup (after buying VPS)
-
-SSH into VPS:
-```bash
-ssh root@YOUR_SERVER_IP
-```
-
-Install packages:
-```bash
-apt update
-apt install -y python3 python3-pip nginx certbot python3-certbot-nginx
-```
-
-Create project folder and upload files:
-```bash
-mkdir -p /var/www/centsbrief
-```
-
-Upload your local project to `/var/www/centsbrief` using SFTP/WinSCP.
-
-Install Python dependencies:
-```bash
-cd /var/www/centsbrief
-pip3 install -r requirements.txt
-```
-
-Optional but recommended:
-```bash
-pip3 install python-dotenv
-```
+* **Fully Automated Pipeline**: Your PC can stay off. An automation script (`main.py`) running on a scheduler handles the entire workflow autonomously.
+* **AI-Generated Information Gain**: Driven by Groq's high-speed API (`llama-3.3-70b-versatile`), it pulls real headline data, processes it, and generates a structured, ~1000-word daily brief explaining *what happened*, *why markets reacted*, and *the impact on local wallets*.
+* **Pristine SEO & Clean URLs (April 2026 Update)**: 
+    * HTML templates are actively stripped of meta-tag comment markers during generation, providing perfect `<title>`, `<meta>`, and `<link>` rendering for advanced search engine crawlers. 
+    * Internal site links use dynamic **clean URLs** (e.g., `href="about"` instead of `href="about.html"`). This simulates a modern Single Page Application (SPA) experience while running purely statically.
+* **Zero-CLS Tailwind Frontend**: Built on a highly optimized, fully responsive, and visually lightweight TailwindCSS design system.
+* **Rolling Archive Automation**: Automatically manages storage by culling old financial briefs beyond a specified retention period (default 60 days) to keep deployment sizes small. 
 
 ---
 
-## 4) Add secure environment config
+## 🛠️ The Technical Stack
 
-Create file:
-`/var/www/centsbrief/.env`
+* **Frontend**: Vanilla HTML5, JavaScript, and Tailwind CSS.
+* **Backend Pipeline**: Python 3 orchestrator (`main.py`).
+* **Data Ingestion**: `feedparser` pulling real-time RSS market feeds (defaults to Yahoo Finance).
+* **AI Engine**: Groq Cloud REST API.
+* **Server**: Hosted statically online (e.g., via GitHub Pages or NGINX), seamlessly serving the updated index and dynamically generated `.html` files without the extension.
 
-Content:
+---
+
+## ⚙️ How `main.py` Works (The Engine)
+
+The magic of CentsBrief happens entirely within `main.py` when it executes. This is what it does during a run:
+
+1. **Information Gathering**: Parses the raw RSS feed via the preset `RSS_FEED_URL` to grab the top US/UK market headlines.
+2. **AI Processing**: Compiles a localized prompt requesting exactly ~1,000 words. The script interfaces securely with the Groq API to interpret the data into structured markdown (incorporating headers, bullet points, and Q&A).
+3. **HTML Conversion**: Transforms the raw Markdown output into styled HTML using the target Tailwind typography tokens.
+4. **Template Generation**: Clones the master `article-template.html` file into a new file named `brief-[TODAY'S DATE].html`.
+5. **Live SEO Cleaning**: Scans the template, cleans out all template placeholder comments inside the `<title>` and `<meta>` blocks (to avoid trailing HTML comments breaking SEO cards on social networks), and outputs a completely clean file setup ready for GitHub Pages hosting.
+6. **Dynamic Routing Update**: Safely updates `index.html` via regex—sliding the latest headline directly into the "Hero" component, moving the previous brief down into the "Latest Briefs" feed, and updating all references using the clean URL protocol.
+7. **Housekeeping:** Sweeps the directory for files older than `BRIEF_RETENTION_DAYS` and permanently deletes them.
+
+---
+
+## 🖥️ Live Server & Automation Setup
+
+Want to host this 24/7 so it runs while you sleep?
+
+### 1) Requirements
+1. Linux VPS (Ubuntu 22.04+ recommended)
+2. Groq API key
+3. Registered Domain (e.g., `centsbreif.online`) connected to the VPS via DNS (`A` Records).
+
+### 2) Environment Configuration
+Move your files to `/var/www/centsbrief` and create a `.env` file with restrictive permissions (`chmod 600`):
 ```env
-GROQ_API_KEY=YOUR_NEW_ROTATED_KEY
+GROQ_API_KEY=YOUR_GROQ_KEY
 GROQ_MODEL=llama-3.3-70b-versatile
 SITE_BASE_URL=https://centsbreif.online
 BRIEF_RETENTION_DAYS=60
 RSS_FEED_URL=https://feeds.finance.yahoo.com/rss/2.0/headline?s=%5EGSPC,%5EFTSE&region=US&lang=en-US
 ```
 
-Secure it:
-```bash
-chmod 600 /var/www/centsbrief/.env
-```
-
----
-
-## 5) Connect your domain to VPS
-
-At your domain registrar DNS:
-- `A` record: `@` -> `YOUR_SERVER_IP`
-- `A` record: `www` -> `YOUR_SERVER_IP`
-
-Wait for propagation.
-
----
-
-## 6) Nginx web server config (24/7 live)
-
-Create:
-`/etc/nginx/sites-available/centsbrief`
-
+### 3) Web Server Binding 
+Since we use Clean URLs, configure your `NGINX` instance to treat requests without extensions as HTML files:
 ```nginx
 server {
     server_name centsbreif.online www.centsbreif.online;
@@ -104,102 +72,20 @@ server {
     index index.html;
 
     location / {
-        try_files $uri $uri/ =404;
+        # This directive ensures paths like `/about` correctly bind to `/about.html`
+        try_files $uri $uri.html $uri/ =404;
     }
 }
 ```
 
-Enable and restart:
-```bash
-ln -s /etc/nginx/sites-available/centsbrief /etc/nginx/sites-enabled/centsbrief
-nginx -t
-systemctl restart nginx
-```
-
-Enable HTTPS:
-```bash
-certbot --nginx -d centsbreif.online -d www.centsbreif.online
-```
-
----
-
-## 7) Fully automatic daily posting (PC OFF)
-
-Set cron on VPS:
+### 4) Unattended Automation 
+Set up a daily cron job so the Python script triggers everything automatically:
 ```bash
 crontab -e
 ```
-
-Add line:
+Add the following line (Runs every morning at 05:00 server time):
 ```cron
 0 5 * * * cd /var/www/centsbrief && export $(cat .env | xargs) && /usr/bin/python3 main.py >> /var/log/centsbrief.log 2>&1
 ```
 
-This means:
-- Every day at 05:00 server time
-- AI creates today’s brief
-- Homepage updates automatically
-- Old pages beyond retention are removed
-- No manual commands needed daily
-
----
-
-## 8) Verify automation once
-
-Run once manually on server:
-```bash
-cd /var/www/centsbrief
-export $(cat .env | xargs)
-python3 main.py
-```
-
-Check output files:
-- `brief-YYYY-MM-DD.html` created
-- `index.html` updated
-
-Check logs later:
-```bash
-tail -n 100 /var/log/centsbrief.log
-```
-
----
-
-## 9) Security checklist
-
-- Keep `.env` only on server
-- Never paste API key in code files
-- Rotate API key if exposed
-- Keep file permissions strict (`chmod 600 .env`)
-- Keep server updated:
-```bash
-apt update && apt upgrade -y
-```
-
----
-
-## 10) Quick maintenance (monthly)
-
-1. Check website loads over HTTPS
-2. Check latest brief generated
-3. Check cron log for failures
-4. Rotate API key periodically
-5. Verify ad containers still present on article and homepage
-
----
-
-## 11) If cron fails
-
-Common causes:
-- invalid API key or zero Groq quota
-- wrong python path
-- malformed `.env` file
-- DNS/SSL not configured
-
-Debug:
-```bash
-cd /var/www/centsbrief
-export $(cat .env | xargs)
-python3 main.py
-```
-
-Then fix errors shown in terminal/log.
+By completing this step, your server will automatically pull news, write the 1,000 word brief, rewrite the HTML code on your index page, configure the exact clean URLs and meta SEO tags, and immediately stream the results to the user! No daily oversight required.
