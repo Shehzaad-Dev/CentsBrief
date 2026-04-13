@@ -19,12 +19,15 @@ SITE_BASE_URL = os.getenv("SITE_BASE_URL", "https://centsbreif.online").rstrip("
 GROQ_MODEL = os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile")
 
 
-def replace_marker(content: str, marker_name: str, value: str) -> str:
+def replace_marker(content: str, marker_name: str, value: str, keep_markers: bool = False) -> str:
     pattern = re.compile(
         rf"(<!--\s*{re.escape(marker_name)}\s*-->)(.*?)(<!--\s*/{re.escape(marker_name)}\s*-->)",
         re.DOTALL,
     )
-    return pattern.sub(lambda m: f"{m.group(1)}{value}{m.group(3)}", content)
+    if keep_markers:
+        return pattern.sub(lambda m: f"{m.group(1)}{value}{m.group(3)}", content)
+    else:
+        return pattern.sub(lambda m: value, content)
 
 
 def fetch_top_finance_news(feed_url: str, limit: int = 3) -> List[str]:
@@ -221,7 +224,8 @@ def update_article_from_template(
 ) -> str:
     published_iso = publish_date.strftime("%Y-%m-%dT%H:%M:%SZ")
     published_human = publish_date.strftime("%B %d, %Y")
-    canonical_url = f"{SITE_BASE_URL}/{output_filename}"
+    clean_filename = output_filename.replace(".html", "")
+    canonical_url = f"{SITE_BASE_URL}/{clean_filename}"
     read_time = f"{max(4, round(TARGET_WORD_COUNT / 220))} min read"
 
     article_html = template_content
@@ -261,19 +265,19 @@ def build_brief_card(headline: str, lede: str, output_filename: str, publish_dat
         <p class="text-xs font-semibold uppercase tracking-[0.14em] text-emerald">{date_label}</p>
         <h3 class="mt-2 text-lg font-bold leading-snug">{safe_headline}</h3>
         <p class="mt-3 text-sm leading-relaxed text-slate-600">{safe_summary}</p>
-        <a href="{output_filename}" class="mt-4 inline-block text-sm font-semibold text-emerald hover:underline">Read More</a>
+        <a href="{output_filename.replace('.html', '')}" class="mt-4 inline-block text-sm font-semibold text-emerald hover:underline">Read More</a>
       </article>
     """.strip()
 
 
 def update_homepage(index_html: str, headline: str, summary: str, lede: str, output_filename: str, publish_date: dt.datetime) -> str:
     updated = index_html
-    updated = replace_marker(updated, "HERO_HEADLINE", headline)
-    updated = replace_marker(updated, "HERO_SUMMARY", lede)
+    updated = replace_marker(updated, "HERO_HEADLINE", headline, keep_markers=True)
+    updated = replace_marker(updated, "HERO_SUMMARY", lede, keep_markers=True)
 
     updated = re.sub(
         r'(<a href=")[^"]*(" class="mt-6 inline-flex items-center rounded-md bg-emerald)',
-        rf'\1{output_filename}\2',
+        rf'\1{output_filename.replace(".html", "")}\2',
         updated,
         count=1,
     )
@@ -290,13 +294,14 @@ def update_homepage(index_html: str, headline: str, summary: str, lede: str, out
     existing_cards = re.findall(r"<article\b.*?</article>", region, flags=re.DOTALL)
     filtered_cards = []
     for card in existing_cards:
-        href_match = re.search(r'href="(brief-\d{4}-\d{2}-\d{2}\.html)"', card)
+        href_match = re.search(r'href="(brief-\d{4}-\d{2}-\d{2})"|href="(brief-\d{4}-\d{2}-\d{2})\.html"', card)
         if not href_match:
             continue
-        href = href_match.group(1)
-        if href == output_filename:
+        href = href_match.group(1) or href_match.group(2)
+        if href == output_filename.replace(".html", ""):
             continue
-        if not (BASE_DIR / href).exists():
+        # Also need to make sure we check for the actual file
+        if not (BASE_DIR / f"{href}.html").exists():
             continue
         filtered_cards.append(card)
     existing_cards = filtered_cards
