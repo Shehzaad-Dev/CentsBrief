@@ -53,12 +53,6 @@
   <div class="pt-24 sm:pt-28"></div>
 
   <div class="mx-auto w-full max-w-7xl px-4 pt-3 sm:px-6 lg:px-8">
-    <aside id="ad-leaderboard" class="mx-auto mb-8 flex w-full max-w-5xl flex-col items-center justify-center rounded-lg border border-slate-300 bg-slate-100 px-4 text-center">
-      <p class="pt-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-500">ADVERTISEMENT</p>
-      <div class="flex h-[50px] w-full items-center justify-center text-xs text-slate-500 sm:h-[90px]">
-        320x50 Mobile / 728x90 Desktop
-      </div>
-    </aside>
   </div>
 
   <main class="mx-auto w-full max-w-7xl px-4 pb-24 sm:px-6 lg:px-8">
@@ -84,10 +78,6 @@
         <!-- ARTICLE_CONTENT_START -->
         <p>The world of finance is abuzz with a mix of geopolitical tensions, unusual investment choices, and stock market fluctuations. To navigate these complex issues, it&#x27;s essential to break down the key developments and understand their implications for personal money decisions.</p>
         <p>The current market landscape is characterized by increased uncertainty, with investors and households alike seeking to make sense of the latest news and its potential impact on their financial well-being.</p>
-        <aside id="ad-mid-content" class="not-prose my-8 flex flex-col items-center justify-center rounded-lg border border-slate-300 bg-slate-100">
-  <p class="pt-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-500">ADVERTISEMENT</p>
-  <div class="flex min-h-[250px] w-full items-center justify-center px-4 text-center text-xs text-slate-500">Inline article unit</div>
-</aside>
         
         <h2 class="mt-10 border-l-4 border-emerald pl-3 text-2xl font-extrabold text-navy">What Happened</h2>
         <p>Recently, AJ Scaramucci spent $16.5 million on a Logan Paul Pokémon card, and now he&#x27;s on the hunt for dinosaur fossils. This unusual investment choice may seem unrelated to the broader financial landscape, but it highlights the diverse and sometimes unconventional investment opportunities that exist.</p>
@@ -144,14 +134,7 @@
     </article>
   </main>
 
-  <aside id="ad-sticky-footer" class="fixed bottom-0 left-0 right-0 z-40 mx-auto flex w-full items-center justify-center border-t border-slate-300 bg-slate-100 px-4 py-2 shadow-[0_-4px_20px_rgba(15,23,42,0.10)]">
-    <div class="flex w-full max-w-5xl flex-col items-center justify-center rounded-md border border-slate-300 bg-slate-100">
-      <p class="pt-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-500">ADVERTISEMENT</p>
-      <div class="flex h-[50px] w-full items-center justify-center text-xs text-slate-500">Sticky mobile/footer unit</div>
-    </div>
-  </aside>
-
-  <footer class="bg-navy pb-24 pt-10 text-slate-200">
+  <footer class="bg-navy pb-12 pt-10 text-slate-200">
     <div class="mx-auto grid w-full max-w-7xl gap-10 px-4 sm:px-6 lg:grid-cols-2 lg:px-8">
       <section>
         <h2 class="text-2xl font-extrabold">CentsBrief</h2>
@@ -182,13 +165,6 @@
       © <span id="year"></span> CentsBrief.online. All rights reserved.
     </div>
   </footer>
-
-  <template id="ad-inline-template">
-    <aside id="ad-mid-content" class="not-prose my-8 flex flex-col items-center justify-center rounded-lg border border-slate-300 bg-slate-100">
-      <p class="pt-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-500">ADVERTISEMENT</p>
-      <div class="flex min-h-[250px] w-full items-center justify-center px-4 text-center text-xs text-slate-500">Inline article unit</div>
-    </aside>
-  </template>
 
   <script type="application/ld+json">
     {
@@ -235,12 +211,6 @@
       node.textContent = String(input ?? "");
       return node.textContent;
     };
-    const paragraphs = articleBody ? articleBody.querySelectorAll("p") : [];
-    if (paragraphs.length >= 2 && !document.getElementById("ad-mid-content")) {
-      const adTemplate = document.getElementById("ad-inline-template");
-      const adNode = adTemplate.content.cloneNode(true);
-      paragraphs[1].insertAdjacentElement("afterend", adNode.firstElementChild);
-    }
     // Optional hook for future client-side dynamic copy while preventing XSS.
     if (window.CENTSBRIEF_DYNAMIC_NOTE) {
       const note = document.createElement("p");

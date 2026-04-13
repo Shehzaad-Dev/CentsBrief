@@ -14,13 +14,6 @@ INDEX_PATH = BASE_DIR / "index.html"
 ARTICLE_TEMPLATE_PATH = BASE_DIR / "article-template.html"
 TARGET_WORD_COUNT = 1000
 RETENTION_DAYS = int(os.getenv("BRIEF_RETENTION_DAYS", "60"))
-INLINE_AD_BLOCK = """
-<aside id="ad-mid-content" class="not-prose my-8 flex flex-col items-center justify-center rounded-lg border border-slate-300 bg-slate-100">
-  <p class="pt-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-500">ADVERTISEMENT</p>
-  <div class="flex min-h-[250px] w-full items-center justify-center px-4 text-center text-xs text-slate-500">Inline article unit</div>
-</aside>
-""".strip()
-
 DEFAULT_FEED_URL = "https://feeds.finance.yahoo.com/rss/2.0/headline?s=%5EGSPC,%5EFTSE&region=US&lang=en-US"
 SITE_BASE_URL = os.getenv("SITE_BASE_URL", "https://centsbrief.online").rstrip("/")
 GROQ_MODEL = os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile")
@@ -249,11 +242,6 @@ def update_article_from_template(
     article_html = replace_marker(article_html, "READ_TIME", read_time)
     article_html = replace_marker(article_html, "ARTICLE_CONTENT_START", "ARTICLE_CONTENT_START")
     article_html = replace_marker(article_html, "ARTICLE_CONTENT_END", "ARTICLE_CONTENT_END")
-
-    paragraph_closes = [m.start() for m in re.finditer(r"</p>", brief_html)]
-    if len(paragraph_closes) >= 2 and "id=\"ad-mid-content\"" not in brief_html:
-        insert_at = paragraph_closes[1] + 4
-        brief_html = f"{brief_html[:insert_at]}\n        {INLINE_AD_BLOCK}\n        {brief_html[insert_at:]}"
 
     article_html = re.sub(
         r"(<!--\s*ARTICLE_CONTENT_START\s*-->)(.*?)(<!--\s*ARTICLE_CONTENT_END\s*-->)",
