@@ -33,7 +33,7 @@ jobs:
           GROQ_API_KEY: ${{ secrets.GroqAPI }}
           GROQ_MODEL: llama-3.3-70b-versatile
           RSS_FEED_URL: ${{ secrets.RSS_FEED_URL }}
-          SITE_BASE_URL: https://centsbrief.online
+          SITE_BASE_URL: https://centsbreif.online
         run: python main.py
 
       - name: Commit and push if changed

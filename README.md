@@ -21,7 +21,7 @@ The automation runs on a VPS server, not your local machine.
 
 ## 2) Requirements
 
-1. Domain name (e.g. `centsbrief.online`)
+1. Domain name (e.g. `centsbreif.online`)
 2. Linux VPS (Ubuntu 22.04+ recommended)
 3. Groq API key
 4. Your project files uploaded to server
@@ -70,7 +70,7 @@ Content:
 ```env
 GROQ_API_KEY=YOUR_NEW_ROTATED_KEY
 GROQ_MODEL=llama-3.3-70b-versatile
-SITE_BASE_URL=https://centsbrief.online
+SITE_BASE_URL=https://centsbreif.online
 BRIEF_RETENTION_DAYS=60
 RSS_FEED_URL=https://feeds.finance.yahoo.com/rss/2.0/headline?s=%5EGSPC,%5EFTSE&region=US&lang=en-US
 ```
@@ -99,7 +99,7 @@ Create:
 
 ```nginx
 server {
-    server_name centsbrief.online www.centsbrief.online;
+    server_name centsbreif.online www.centsbreif.online;
     root /var/www/centsbrief;
     index index.html;
 
@@ -118,7 +118,7 @@ systemctl restart nginx
 
 Enable HTTPS:
 ```bash
-certbot --nginx -d centsbrief.online -d www.centsbrief.online
+certbot --nginx -d centsbreif.online -d www.centsbreif.online
 ```
 
 ---

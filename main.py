@@ -15,7 +15,7 @@ ARTICLE_TEMPLATE_PATH = BASE_DIR / "article-template.html"
 TARGET_WORD_COUNT = 1000
 RETENTION_DAYS = int(os.getenv("BRIEF_RETENTION_DAYS", "60"))
 DEFAULT_FEED_URL = "https://feeds.finance.yahoo.com/rss/2.0/headline?s=%5EGSPC,%5EFTSE&region=US&lang=en-US"
-SITE_BASE_URL = os.getenv("SITE_BASE_URL", "https://centsbrief.online").rstrip("/")
+SITE_BASE_URL = os.getenv("SITE_BASE_URL", "https://centsbreif.online").rstrip("/")
 GROQ_MODEL = os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile")
 
 
