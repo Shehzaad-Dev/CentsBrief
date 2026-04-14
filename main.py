@@ -467,7 +467,7 @@ def generate_sitemap(today: dt.datetime) -> None:
     lastmod = today.strftime("%Y-%m-%d")
     urls = []
     
-    html_files = sorted([f for f in BASE_DIR.glob("*.html") if f.name not in exclude_files])
+    html_files = sorted([f for f in BASE_DIR.glob("*.html") if f.name not in exclude_files and not f.name.startswith("brief-")])
     for path in html_files:
         clean_name = path.name.replace(".html", "")
         loc = f"{SITE_BASE_URL}/" if clean_name == "index" else f"{SITE_BASE_URL}/{clean_name}"

@@ -41,8 +41,9 @@ jobs:
           if [[ -n "$(git status --porcelain)" ]]; then
             git config user.name "github-actions[bot]"
             git config user.email "github-actions[bot]@users.noreply.github.com"
-            git add --all index.html brief-*.html briefs/*.html sitemap.xml robots.txt
-            # Add deleted files manually based on pattern since bash might not expand deleted files to add
+            git add --all index.html briefs/*.html sitemap.xml robots.txt
+            # Force remove any legacy briefs from root to ensure they never reappear in the index
+            git ls-files | grep "^brief-" | xargs -r git rm -f
             git ls-files --deleted | grep -E "brief-|briefs/" | xargs -r git rm
             git commit -m "chore: publish daily automated finance brief and clean up archive"
             git push
