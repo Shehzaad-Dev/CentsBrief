@@ -230,7 +230,6 @@ def generate_robots_txt() -> None:
 
 
 def generate_json_ld(headline: str, summary: str, brief_html: str, publish_date: dt.datetime, canonical_url: str) -> str:
-    published_iso = publish_date.strftime("%Y-%m-%d %H:%M:%S")
     desc = summary.strip()
     
     # FinancialNewsArticle Schema
@@ -306,7 +305,6 @@ def get_nav_links(today: dt.datetime) -> str:
         if current_date_str in path.name:
             if i + 1 < len(all_briefs):
                 prev_path = all_briefs[i+1]
-                prev_title = "Previous Brief"
                 prev_link = f'<a href="{prev_path.stem}" class="flex flex-col items-start gap-1 text-slate-600 hover:text-emerald"><span class="text-xs font-bold uppercase tracking-widest text-slate-400">Previous</span><span class="text-sm font-bold line-clamp-1">Market Insight Archive</span></a>'
             if i - 1 >= 0:
                 next_path = all_briefs[i-1]
@@ -336,11 +334,10 @@ def update_article_from_template(
     published_iso = publish_date.strftime("%Y-%m-%dT%H:%M:%SZ")
     published_human = publish_date.strftime("%B %d, %Y")
     clean_filename = output_filename.replace(".html", "")
-    canonical_url = f"{SITE_BASE_URL}/{clean_filename}"
+    canonical_url = f"{SITE_BASE_URL}/briefs/{clean_filename}"
     read_time = f"{max(4, round(TARGET_WORD_COUNT / 220))} min read"
 
     json_ld = generate_json_ld(headline, summary, brief_html, publish_date, canonical_url)
-    related_html = get_related_insights(publish_date)
 
     article_html = template_content
     article_html = replace_marker(article_html, "ARTICLE_TITLE", f"{headline} | CentsBrief")
@@ -362,7 +359,7 @@ def update_article_from_template(
     article_html = replace_marker(article_html, "READ_TIME", read_time)
     article_html = replace_marker(article_html, "ARTICLE_CONTENT_START", "ARTICLE_CONTENT_START")
     article_html = replace_marker(article_html, "ARTICLE_CONTENT_END", "ARTICLE_CONTENT_END")
-    article_html = replace_marker(article_html, "RELATED_INSIGHTS", related_html)
+    article_html = replace_marker(article_html, "RELATED_INSIGHTS", "")
 
     article_html = re.sub(
         r"(<!--\s*ARTICLE_CONTENT_START\s*-->)(.*?)(<!--\s*ARTICLE_CONTENT_END\s*-->)",
@@ -382,7 +379,7 @@ def build_brief_card(headline: str, lede: str, output_filename: str, publish_dat
         <p class="text-xs font-semibold uppercase tracking-[0.14em] text-emerald">{date_label}</p>
         <h3 class="mt-2 text-lg font-bold leading-snug">{safe_headline}</h3>
         <p class="mt-3 text-sm leading-relaxed text-slate-600">{safe_summary}</p>
-        <a href="{output_filename.replace('.html', '')}" class="mt-4 inline-block text-sm font-semibold text-emerald hover:underline">Read More</a>
+        <a href="briefs/{output_filename.replace('.html', '')}" class="mt-4 inline-block text-sm font-semibold text-emerald hover:underline">Read More</a>
       </article>
     """.strip()
 
@@ -394,7 +391,7 @@ def update_homepage(index_html: str, headline: str, summary: str, lede: str, out
 
     updated = re.sub(
         r'(<a href=")[^"]*(" class="mt-6 inline-flex items-center rounded-md bg-emerald)',
-        rf'\1{output_filename.replace(".html", "")}\2',
+        rf'\1briefs/{output_filename.replace(".html", "")}\2',
         updated,
         count=1,
     )
@@ -411,14 +408,11 @@ def update_homepage(index_html: str, headline: str, summary: str, lede: str, out
     existing_cards = re.findall(r"<article\b.*?</article>", region, flags=re.DOTALL)
     filtered_cards = []
     for card in existing_cards:
-        href_match = re.search(r'href="(brief-\d{4}-\d{2}-\d{2})"|href="(brief-\d{4}-\d{2}-\d{2})\.html"', card)
+        href_match = re.search(r'href="briefs/(brief-\d{4}-\d{2}-\d{2}[^"]*)"|href="(brief-\d{4}-\d{2}-\d{2}[^"]*)"', card)
         if not href_match:
             continue
         href = href_match.group(1) or href_match.group(2)
         if href == output_filename.replace(".html", ""):
-            continue
-        # Also need to make sure we check for the actual file
-        if not (BASE_DIR / f"{href}.html").exists():
             continue
         filtered_cards.append(card)
     existing_cards = filtered_cards
@@ -435,8 +429,13 @@ def update_homepage(index_html: str, headline: str, summary: str, lede: str, out
 def cleanup_old_briefs(today: dt.datetime, retention_days: int) -> list[str]:
     cutoff = today.date() - dt.timedelta(days=retention_days)
     deleted: list[str] = []
-    for path in BASE_DIR.glob("brief-????-??-??.html"):
-        date_match = re.search(r"brief-(\d{4}-\d{2}-\d{2})\.html$", path.name)
+    # Clean up from root
+    for path in BASE_DIR.glob("brief-????-??-??*.html"):
+        path.unlink(missing_ok=True)
+        deleted.append(path.name)
+    # Clean up from briefs/
+    for path in BRIEFS_DIR.glob("brief-????-??-??*.html"):
+        date_match = re.search(r"brief-(\d{4}-\d{2}-\d{2})", path.name)
         if not date_match:
             continue
         try:
@@ -460,14 +459,12 @@ def generate_sitemap(today: dt.datetime) -> None:
     lastmod = today.strftime("%Y-%m-%d")
     urls = []
     
-    # Root level pages
     html_files = sorted([f for f in BASE_DIR.glob("*.html") if f.name not in exclude_files])
     for path in html_files:
         clean_name = path.name.replace(".html", "")
         loc = f"{SITE_BASE_URL}/" if clean_name == "index" else f"{SITE_BASE_URL}/{clean_name}"
         urls.append(f"  <url>\n    <loc>{loc}</loc>\n    <lastmod>{lastmod}</lastmod>\n    <priority>{'1.0' if clean_name == 'index' else '0.7'}</priority>\n  </url>")
     
-    # Briefs directory
     if BRIEFS_DIR.exists():
         brief_files = sorted(list(BRIEFS_DIR.glob("*.html")), reverse=True)
         for path in brief_files:
@@ -514,7 +511,6 @@ def main() -> None:
     article_html = replace_marker(article_html, "ARTICLE_NAVIGATION", nav_links)
     
     output_path.write_text(article_html, encoding="utf-8")
-
     deleted_files = cleanup_old_briefs(today=today, retention_days=RETENTION_DAYS)
 
     index_content = INDEX_PATH.read_text(encoding="utf-8")
@@ -523,24 +519,14 @@ def main() -> None:
         headline=headline,
         summary=summary,
         lede=lede,
-        output_filename=f"briefs/{output_filename}",
+        output_filename=output_filename,
         publish_date=today,
     )
     INDEX_PATH.write_text(minify_html(updated_index), encoding="utf-8")
 
     generate_sitemap(today)
     generate_robots_txt()
-
     print(f"Created: {output_filename}")
-    print("Updated: index.html")
-    print("Generated: sitemap.xml & robots.txt")
-    print("Headlines used:")
-    for item in titles:
-        print(f"- {item}")
-    if deleted_files:
-        print("Deleted old brief pages:")
-        for item in deleted_files:
-            print(f"- {item}")
 
 
 if __name__ == "__main__":
