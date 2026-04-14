@@ -294,31 +294,63 @@ def generate_json_ld(headline: str, summary: str, brief_html: str, publish_date:
     return "\n".join([f'<script type="application/ld+json">\n{json.dumps(s, indent=2)}\n</script>' for s in schemas])
 
 
+def extract_article_info(path: Path) -> Tuple[str, str]:
+    """Extracts headline and a short teaser from a generated article file."""
+    if not path.exists():
+        return "Market Insight Archive", "Read our previous market analysis and briefings."
+    content = path.read_text(encoding="utf-8")
+    headline_match = re.search(r"<!-- ARTICLE_HEADLINE -->(.*?)<!-- /ARTICLE_HEADLINE -->", content)
+    lede_match = re.search(r"<!-- ARTICLE_LEDE -->(.*?)<!-- /ARTICLE_LEDE -->", content)
+    
+    headline = headline_match.group(1).strip() if headline_match else "Market Briefing"
+    teaser = lede_match.group(1).strip() if lede_match else "Daily financial summary for US and UK readers."
+    return headline, teaser
+
+
 def get_nav_links(today: dt.datetime) -> str:
     all_briefs = sorted(list(BRIEFS_DIR.glob("*.html")), reverse=True)
-    prev_link = ""
-    next_link = ""
+    prev_card = ""
+    next_card = ""
     
     current_date_str = today.strftime("%Y-%m-%d")
     
     for i, path in enumerate(all_briefs):
         if current_date_str in path.name:
+            # Previous Article (Older)
             if i + 1 < len(all_briefs):
                 prev_path = all_briefs[i+1]
-                prev_link = f'<a href="{prev_path.stem}" class="flex flex-col items-start gap-1 text-slate-600 hover:text-emerald"><span class="text-xs font-bold uppercase tracking-widest text-slate-400">Previous</span><span class="text-sm font-bold line-clamp-1">Market Insight Archive</span></a>'
+                h, t = extract_article_info(prev_path)
+                prev_card = f"""
+                <div class="group relative flex flex-col items-start gap-4 rounded-2xl border border-slate-200 bg-white p-6 transition hover:border-emerald/50 hover:shadow-md sm:w-1/2">
+                  <span class="text-[10px] font-bold uppercase tracking-widest text-slate-400">Previous Reading</span>
+                  <h3 class="text-base font-bold text-navy line-clamp-2 group-hover:text-emerald">{h}</h3>
+                  <p class="text-xs text-slate-500 line-clamp-2">{t}</p>
+                  <a href="{prev_path.stem}" class="mt-2 text-xs font-bold text-emerald hover:underline">Read Archived Brief &rarr;</a>
+                </div>"""
+            # Next Article (Newer)
             if i - 1 >= 0:
                 next_path = all_briefs[i-1]
-                next_link = f'<a href="{next_path.stem}" class="flex flex-col items-end gap-1 text-right text-slate-600 hover:text-emerald"><span class="text-xs font-bold uppercase tracking-widest text-slate-400">Next</span><span class="text-sm font-bold line-clamp-1">Latest Market Insight</span></a>'
+                h, t = extract_article_info(next_path)
+                next_card = f"""
+                <div class="group relative flex flex-col items-end gap-4 rounded-2xl border border-slate-200 bg-white p-6 text-right transition hover:border-emerald/50 hover:shadow-md sm:w-1/2">
+                  <span class="text-[10px] font-bold uppercase tracking-widest text-slate-400">Latest Update</span>
+                  <h3 class="text-base font-bold text-navy line-clamp-2 group-hover:text-emerald">{h}</h3>
+                  <p class="text-xs text-slate-500 line-clamp-2">{t}</p>
+                  <a href="{next_path.stem}" class="mt-2 text-xs font-bold text-emerald hover:underline">&larr; Read Newest Brief</a>
+                </div>"""
             break
 
-    if not prev_link and not next_link:
+    if not prev_card and not next_card:
         return ""
         
     return f"""
-    <nav class="mt-12 flex items-center justify-between border-t border-slate-100 pt-8" aria-label="Article navigation">
-      <div class="w-1/2">{prev_link}</div>
-      <div class="w-1/2 flex justify-end">{next_link}</div>
-    </nav>
+    <section class="mt-16 border-t border-slate-100 pt-12">
+      <h2 class="mb-8 text-sm font-bold uppercase tracking-widest text-slate-400">Continue Reading</h2>
+      <div class="flex flex-col gap-6 sm:flex-row sm:items-stretch">
+        {prev_card}
+        {next_card}
+      </div>
+    </section>
     """
 
 
@@ -357,16 +389,11 @@ def update_article_from_template(
     article_html = replace_marker(article_html, "PUBLISHED_HUMAN", published_human)
     article_html = replace_marker(article_html, "LAST_UPDATED", "05:00 UTC")
     article_html = replace_marker(article_html, "READ_TIME", read_time)
-    article_html = replace_marker(article_html, "ARTICLE_CONTENT_START", "ARTICLE_CONTENT_START")
-    article_html = replace_marker(article_html, "ARTICLE_CONTENT_END", "ARTICLE_CONTENT_END")
     article_html = replace_marker(article_html, "RELATED_INSIGHTS", "")
 
-    article_html = re.sub(
-        r"(<!--\s*ARTICLE_CONTENT_START\s*-->)(.*?)(<!--\s*ARTICLE_CONTENT_END\s*-->)",
-        rf"\1\n        {brief_html}\n        \3",
-        article_html,
-        flags=re.DOTALL,
-    )
+    # Inject article content while preserving markers
+    article_html = replace_marker(article_html, "BRIEF_BODY", brief_html, keep_markers=True)
+    
     return minify_html(article_html)
 
 
