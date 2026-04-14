@@ -262,11 +262,12 @@ def get_related_insights(today: dt.datetime) -> str:
             pass
         links.append(f'<li><a href="{slug}" class="text-emerald font-semibold hover:underline">{headline}</a></li>')
 
+    links_html = "\n          ".join(links)
     return f"""
       <section class="mt-12 border-t border-slate-100 pt-8">
         <h3 class="text-xl font-extrabold text-navy">Related Market Insights</h3>
         <ul class="mt-4 space-y-3 list-disc pl-5">
-          {"\n          ".join(links)}
+          {links_html}
         </ul>
       </section>
     """
