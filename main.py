@@ -374,12 +374,16 @@ def build_brief_card(headline: str, lede: str, output_filename: str, publish_dat
     date_label = publish_date.strftime("%b %d, %Y")
     safe_headline = html.escape(headline)
     safe_summary = html.escape(lede)
+    clean_name = output_filename.replace('.html', '')
+    if clean_name.startswith('briefs/'):
+        clean_name = clean_name[len('briefs/'):]
+        
     return f"""
       <article class="rounded-xl bg-white p-5 shadow-sm ring-1 ring-slate-200 transition hover:shadow-md">
         <p class="text-xs font-semibold uppercase tracking-[0.14em] text-emerald">{date_label}</p>
         <h3 class="mt-2 text-lg font-bold leading-snug">{safe_headline}</h3>
         <p class="mt-3 text-sm leading-relaxed text-slate-600">{safe_summary}</p>
-        <a href="briefs/{output_filename.replace('.html', '')}" class="mt-4 inline-block text-sm font-semibold text-emerald hover:underline">Read More</a>
+        <a href="briefs/{clean_name}" class="mt-4 inline-block text-sm font-semibold text-emerald hover:underline">Read More</a>
       </article>
     """.strip()
 
@@ -389,9 +393,13 @@ def update_homepage(index_html: str, headline: str, summary: str, lede: str, out
     updated = replace_marker(updated, "HERO_HEADLINE", headline, keep_markers=True)
     updated = replace_marker(updated, "HERO_SUMMARY", lede, keep_markers=True)
 
+    clean_name = output_filename.replace(".html", "")
+    if clean_name.startswith("briefs/"):
+        clean_name = clean_name[len("briefs/"):]
+
     updated = re.sub(
         r'(<a href=")[^"]*(" class="mt-6 inline-flex items-center rounded-md bg-emerald)',
-        rf'\1briefs/{output_filename.replace(".html", "")}\2',
+        rf'\1briefs/{clean_name}\2',
         updated,
         count=1,
     )

@@ -9,7 +9,7 @@ BASE = Path(__file__).resolve().parent
 index_path = BASE / "index.html"
 index_html = index_path.read_text(encoding="utf-8")
 
-base_date = dt.datetime(2026, 4, 13, 8, 0, 0)
+base_date = dt.datetime.now()
 headlines = get_live_finance_headlines(limit=30)
 BRIEFS_DIR = BASE / "briefs"
 if len(headlines) < 30:
