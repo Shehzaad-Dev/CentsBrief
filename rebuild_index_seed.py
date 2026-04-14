@@ -11,6 +11,7 @@ index_html = index_path.read_text(encoding="utf-8")
 
 base_date = dt.datetime(2026, 4, 13, 8, 0, 0)
 headlines = get_live_finance_headlines(limit=30)
+BRIEFS_DIR = BASE / "briefs"
 if len(headlines) < 30:
     for title in FALLBACK_HEADLINES:
         if title.lower() not in {h.lower() for h in headlines}:
@@ -21,10 +22,28 @@ if len(headlines) < 30:
 items = []
 for i, headline in enumerate(headlines[:30]):
     d = base_date - dt.timedelta(days=i)
-    filename = f"brief-{d.strftime('%Y-%m-%d')}.html"
-    brief_path = BASE / filename
+    # Search for files starting with brief-YYYY-MM-DD
+    pattern = f"brief-{d.strftime('%Y-%m-%d')}*.html"
+    
+    match_found = False
+    filename = ""
+    brief_path = None
+    
+    # Check parent directory and briefs/ directory
+    for search_dir in [BASE, BRIEFS_DIR]:
+        if not search_dir.exists(): continue
+        files = list(search_dir.glob(pattern))
+        if files:
+            brief_path = files[0]
+            filename = str(brief_path.relative_to(BASE)).replace("\\", "/")
+            match_found = True
+            break
+            
+    if not match_found:
+        filename = f"briefs/brief-{d.strftime('%Y-%m-%d')}.html"
+    
     lede = "Markets are repricing rates, inflation, and risk appetite across US and UK assets."
-    if brief_path.exists():
+    if brief_path and brief_path.exists():
         content = brief_path.read_text(encoding="utf-8")
         p_match = re.search(r"<section id=\"article-body\".*?<p>(.*?)</p>", content, flags=re.DOTALL)
         if p_match:

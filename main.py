@@ -18,6 +18,7 @@ RETENTION_DAYS = int(os.getenv("BRIEF_RETENTION_DAYS", "60"))
 DEFAULT_FEED_URL = "https://feeds.finance.yahoo.com/rss/2.0/headline?s=%5EGSPC,%5EFTSE&region=US&lang=en-US"
 SITE_BASE_URL = os.getenv("SITE_BASE_URL", "https://centsbreif.online").rstrip("/")
 GROQ_MODEL = os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile")
+BRIEFS_DIR = BASE_DIR / "briefs"
 
 
 def replace_marker(content: str, marker_name: str, value: str, keep_markers: bool = False) -> str:
@@ -228,77 +229,99 @@ def generate_robots_txt() -> None:
     (BASE_DIR / "robots.txt").write_text(content, encoding="utf-8")
 
 
-def get_related_insights(today: dt.datetime) -> str:
-    briefs = []
-    for path in BASE_DIR.glob("brief-????-??-??.html"):
-        date_str = path.stem.replace("brief-", "")
-        if date_str == today.strftime("%Y-%m-%d"):
-            continue
-        try:
-            brief_date = dt.datetime.strptime(date_str, "%Y-%m-%d")
-            briefs.append((brief_date, path.stem))
-        except ValueError:
-            continue
-
-    briefs.sort(key=lambda x: x[0], reverse=True)
-    targets = briefs[:3]
-
-    if not targets:
-        return ""
-
-    links = []
-    for _, slug in targets:
-        headline = slug.replace("-", " ").title()
-        try:
-            file_content = (BASE_DIR / f"{slug}.html").read_text(encoding="utf-8")
-            match = re.search(r"<!-- ARTICLE_HEADLINE -->(.*?)<!-- /ARTICLE_HEADLINE -->", file_content, re.DOTALL)
-            if match:
-                headline = match.group(1).strip()
-        except:
-            pass
-        links.append(f'<li><a href="{slug}" class="text-emerald font-semibold hover:underline">{headline}</a></li>')
-
-    links_html = "\n          ".join(links)
-    return f"""
-      <section class="mt-12 border-t border-slate-100 pt-8">
-        <h3 class="text-xl font-extrabold text-navy">Related Market Insights</h3>
-        <ul class="mt-4 space-y-3 list-disc pl-5">
-          {links_html}
-        </ul>
-      </section>
-    """
-
-
-def generate_json_ld(headline: str, summary: str, brief_text: str, publish_date: dt.datetime, canonical_url: str) -> str:
-    published_iso = publish_date.strftime("%Y-%m-%dT%H:%M:%SZ")
-    desc = (summary if len(summary) > 40 else brief_text[:200]).strip()
-    desc = re.sub(r"<[^>]+>", "", desc)  # strip any html
-    desc = re.sub(r"##\s+", "", desc).replace("\n", " ")[:160].strip() + "..."
-
-    schema = {
+def generate_json_ld(headline: str, summary: str, brief_html: str, publish_date: dt.datetime, canonical_url: str) -> str:
+    published_iso = publish_date.strftime("%Y-%m-%d %H:%M:%S")
+    desc = summary.strip()
+    
+    # FinancialNewsArticle Schema
+    article_schema = {
         "@context": "https://schema.org",
         "@type": "FinancialNewsArticle",
         "mainEntityOfPage": {"@type": "WebPage", "@id": canonical_url},
         "headline": headline,
         "description": desc,
         "image": [f"{SITE_BASE_URL}/assets/og-default.jpg"],
-        "datePublished": published_iso,
-        "dateModified": published_iso,
+        "datePublished": f"{publish_date.strftime('%Y-%m-%d')}T08:00:00Z",
+        "dateModified": f"{publish_date.strftime('%Y-%m-%d')}T08:00:00Z",
         "author": {
-            "@id": f"{SITE_BASE_URL}/#insight-team",
             "@type": "Organization",
             "name": "CentsBrief Market Insight Team",
+            "url": f"{SITE_BASE_URL}/about"
         },
         "publisher": {
             "@type": "Organization",
             "name": "CentsBrief.online",
-            "logo": {"@type": "ImageObject", "url": f"{SITE_BASE_URL}/assets/logo-512.png"},
+            "logo": {"@type": "ImageObject", "url": f"{SITE_BASE_URL}/assets/logo-512.png"}
         },
         "articleSection": "Markets",
         "inLanguage": "en-US",
-        "isAccessibleForFree": True,
+        "isAccessibleForFree": "True"
     }
-    return f'<script type="application/ld+json">\n{json.dumps(schema, indent=2)}\n</script>'
+
+    # BreadcrumbList Schema
+    breadcrumb_schema = {
+        "@context": "https://schema.org",
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+            {"@type": "ListItem", "position": 1, "name": "Home", "item": f"{SITE_BASE_URL}/"},
+            {"@type": "ListItem", "position": 2, "name": "Daily Briefs", "item": f"{SITE_BASE_URL}/#latest-briefs-heading"},
+            {"@type": "ListItem", "position": 3, "name": headline, "item": canonical_url}
+        ]
+    }
+
+    # FAQPage Schema (extracting questions)
+    faq_schema = None
+    questions = re.findall(r'<p class="rounded-md bg-emerald/10 px-3 py-2"><strong class="text-base font-extrabold text-emerald sm:text-lg">(.*?)</strong></p>', brief_html)
+    if questions:
+        faq_schema = {
+            "@context": "https://schema.org",
+            "@type": "FAQPage",
+            "mainEntity": []
+        }
+        for q in questions:
+            faq_schema["mainEntity"].append({
+                "@type": "Question",
+                "name": q,
+                "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "Please refer to the full market analysis above for detailed context on this market development."
+                }
+            })
+
+    schemas = [article_schema, breadcrumb_schema]
+    if faq_schema:
+        schemas.append(faq_schema)
+
+    return "\n".join([f'<script type="application/ld+json">\n{json.dumps(s, indent=2)}\n</script>' for s in schemas])
+
+
+def get_nav_links(today: dt.datetime) -> str:
+    all_briefs = sorted(list(BRIEFS_DIR.glob("*.html")), reverse=True)
+    prev_link = ""
+    next_link = ""
+    
+    current_date_str = today.strftime("%Y-%m-%d")
+    
+    for i, path in enumerate(all_briefs):
+        if current_date_str in path.name:
+            if i + 1 < len(all_briefs):
+                prev_path = all_briefs[i+1]
+                prev_title = "Previous Brief"
+                prev_link = f'<a href="{prev_path.stem}" class="flex flex-col items-start gap-1 text-slate-600 hover:text-emerald"><span class="text-xs font-bold uppercase tracking-widest text-slate-400">Previous</span><span class="text-sm font-bold line-clamp-1">Market Insight Archive</span></a>'
+            if i - 1 >= 0:
+                next_path = all_briefs[i-1]
+                next_link = f'<a href="{next_path.stem}" class="flex flex-col items-end gap-1 text-right text-slate-600 hover:text-emerald"><span class="text-xs font-bold uppercase tracking-widest text-slate-400">Next</span><span class="text-sm font-bold line-clamp-1">Latest Market Insight</span></a>'
+            break
+
+    if not prev_link and not next_link:
+        return ""
+        
+    return f"""
+    <nav class="mt-12 flex items-center justify-between border-t border-slate-100 pt-8" aria-label="Article navigation">
+      <div class="w-1/2">{prev_link}</div>
+      <div class="w-1/2 flex justify-end">{next_link}</div>
+    </nav>
+    """
 
 
 def update_article_from_template(
@@ -437,48 +460,41 @@ def generate_sitemap(today: dt.datetime) -> None:
     lastmod = today.strftime("%Y-%m-%d")
     urls = []
     
-    # Ensure stable sorting for reproducibility
+    # Root level pages
     html_files = sorted([f for f in BASE_DIR.glob("*.html") if f.name not in exclude_files])
-    
     for path in html_files:
         clean_name = path.name.replace(".html", "")
-        if clean_name == "index":
-            loc = f"{SITE_BASE_URL}/"
-            priority = "1.0"
-        else:
-            loc = f"{SITE_BASE_URL}/{clean_name}"
-            priority = "0.8"
-            
-        urls.append(
-            f"  <url>\n"
-            f"    <loc>{loc}</loc>\n"
-            f"    <lastmod>{lastmod}</lastmod>\n"
-            f"    <priority>{priority}</priority>\n"
-            f"  </url>"
-        )
-        
-    sitemap_content = (
-        '<?xml version="1.0" encoding="UTF-8"?>\n'
-        '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
-        + "\n".join(urls) +
-        '\n</urlset>\n'
-    )
+        loc = f"{SITE_BASE_URL}/" if clean_name == "index" else f"{SITE_BASE_URL}/{clean_name}"
+        urls.append(f"  <url>\n    <loc>{loc}</loc>\n    <lastmod>{lastmod}</lastmod>\n    <priority>{'1.0' if clean_name == 'index' else '0.7'}</priority>\n  </url>")
     
-    sitemap_path = BASE_DIR / "sitemap.xml"
-    sitemap_path.write_text(sitemap_content, encoding="utf-8")
+    # Briefs directory
+    if BRIEFS_DIR.exists():
+        brief_files = sorted(list(BRIEFS_DIR.glob("*.html")), reverse=True)
+        for path in brief_files:
+            loc = f"{SITE_BASE_URL}/briefs/{path.stem}"
+            urls.append(f"  <url>\n    <loc>{loc}</loc>\n    <lastmod>{lastmod}</lastmod>\n    <priority>0.8</priority>\n  </url>")
+        
+    sitemap_content = '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' + "\n".join(urls) + '\n</urlset>\n'
+    (BASE_DIR / "sitemap.xml").write_text(sitemap_content, encoding="utf-8")
 
 
 def main() -> None:
     feed_url = os.getenv("RSS_FEED_URL") or DEFAULT_FEED_URL
     today = dt.datetime.now(dt.UTC).replace(tzinfo=None)
-    output_filename = f"brief-{today.strftime('%Y-%m-%d')}.html"
-    output_path = BASE_DIR / output_filename
+    
+    if not BRIEFS_DIR.exists():
+        BRIEFS_DIR.mkdir(parents=True, exist_ok=True)
 
     if not ARTICLE_TEMPLATE_PATH.exists() or not INDEX_PATH.exists():
         raise FileNotFoundError("Missing required files: article-template.html and/or index.html")
 
     titles = fetch_top_finance_news(feed_url=feed_url, limit=3)
     headline, summary, brief_text = ask_groq_for_brief(titles)
+    
+    slug = re.sub(r"[^a-z0-9]+", "-", headline.lower()).strip("-")
+    output_filename = f"brief-{today.strftime('%Y-%m-%d')}-{slug}.html"
+    output_path = BRIEFS_DIR / output_filename
+
     lede = extract_lede_from_brief_text(brief_text)
     brief_html = brief_text_to_html(brief_text)
 
@@ -492,6 +508,11 @@ def main() -> None:
         publish_date=today,
         output_filename=output_filename,
     )
+    
+    # Add navigation links after brief_html is generated
+    nav_links = get_nav_links(today)
+    article_html = replace_marker(article_html, "ARTICLE_NAVIGATION", nav_links)
+    
     output_path.write_text(article_html, encoding="utf-8")
 
     deleted_files = cleanup_old_briefs(today=today, retention_days=RETENTION_DAYS)
@@ -502,7 +523,7 @@ def main() -> None:
         headline=headline,
         summary=summary,
         lede=lede,
-        output_filename=output_filename,
+        output_filename=f"briefs/{output_filename}",
         publish_date=today,
     )
     INDEX_PATH.write_text(minify_html(updated_index), encoding="utf-8")

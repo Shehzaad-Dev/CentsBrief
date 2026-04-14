@@ -84,10 +84,29 @@
   <script type="application/ld+json">
     {
       "@context": "https://schema.org",
-      "@type": "Organization",
-      "name": "CentsBrief.online",
-      "url": "https://centsbreif.online/",
-      "description": "AI-assisted market briefings and finance tools focused on transparency and concise education."
+      "@type": "AboutPage",
+      "mainEntity": {
+        "@type": "Organization",
+        "name": "CentsBrief.online",
+        "url": "https://centsbreif.online/",
+        "description": "AI-assisted market briefings and finance tools focused on transparency and concise education.",
+        "logo": "https://centsbreif.online/assets/logo-512.png",
+        "contactPoint": {
+          "@type": "ContactPoint",
+          "email": "support@centsbreif.online",
+          "contactType": "customer support"
+        }
+      }
+    }
+  </script>
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {"@type": "ListItem", "position": 1, "name": "Home", "item": "https://centsbreif.online/"},
+        {"@type": "ListItem", "position": 2, "name": "About", "item": "https://centsbreif.online/about"}
+      ]
     }
   </script>
   <script>
