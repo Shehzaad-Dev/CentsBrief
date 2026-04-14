@@ -215,12 +215,8 @@ def extract_lede_from_brief_text(brief_text: str) -> str:
 
 
 def minify_html(content: str) -> str:
-    # Remove HTML comments BUT preserve the structural markers the script needs for future runs
-    # Markers like <!-- RECENT_BRIEFS_START --> or <!-- HERO_HEADLINE -->
-    content = re.sub(r"<!--\s*(?!(?:RECENT_BRIEFS|HERO_HEADLINE|HERO_SUMMARY|ARTICLE|CANONICAL|JSON_LD|LAST_UPDATED|RELATED_INSIGHTS|SNAPSHOT|MODIFIED|PUBLISHED)).*?-->", "", content, flags=re.DOTALL)
-    # Remove whitespace between tags
-    content = re.sub(r">\s+<", "><", content)
-    return content.strip()
+    # Just remove newlines to simplify and keep all tags/comments intact
+    return content.replace("\n", "").strip()
 
 
 def generate_robots_txt() -> None:
