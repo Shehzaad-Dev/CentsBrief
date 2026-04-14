@@ -10,6 +10,64 @@ from main import (
     clean_text
 )
 
+# Boilerplate <p> patterns to remove from the article body HTML
+BOILERPLATE_PARAGRAPHS = [
+    r"<p>The current market landscape is witnessing significant developments[^<]*?</p>",
+    r"<p>Recent news indicates that[^<]*?</p>",
+    r"<p>The world of finance is constantly evolving[^<]*?</p>",
+    r"<p>In the latest market developments[^<]*?</p>",
+    r"<p>A concise top\-line briefing[^<]*?</p>",
+    r"<p>Market briefing and contextual analysis\.</p>",
+]
+
+# Boilerplate lede strings to replace
+BOILERPLATE_LEDE_PHRASES = [
+    "The current market landscape is witnessing significant developments",
+    "Recent news indicates that",
+    "The world of finance is constantly evolving",
+    "A concise top-line briefing explains",
+    "Market briefing and contextual analysis.",
+    "Daily market briefing with practical context",
+    "Markets are repricing rates, inflation, and risk appetite",
+]
+
+
+def is_boilerplate(text: str) -> bool:
+    """Returns True if the text is a known boilerplate phrase."""
+    for phrase in BOILERPLATE_LEDE_PHRASES:
+        if phrase.lower() in text.lower():
+            return True
+    return False
+
+
+def clean_body_html(body: str) -> str:
+    """Remove known boilerplate <p> paragraphs from the body HTML."""
+    for pattern in BOILERPLATE_PARAGRAPHS:
+        body = re.sub(pattern, "", body, flags=re.IGNORECASE | re.DOTALL)
+    # Remove duplicate <!-- BRIEF_BODY --> markers that sometimes appear
+    body = re.sub(r"<!-- BRIEF_BODY -->\s*<!-- BRIEF_BODY -->", "<!-- BRIEF_BODY -->", body)
+    body = re.sub(r"<!-- /BRIEF_BODY -->\s*<!-- /BRIEF_BODY -->", "<!-- /BRIEF_BODY -->", body)
+    return body.strip()
+
+
+def extract_clean_lede(body_html: str) -> str:
+    """Extract the first non-boilerplate sentence from body HTML for use as a lede."""
+    # Find all <p> tags
+    paragraphs = re.findall(r"<p[^>]*>(.*?)</p>", body_html, re.DOTALL)
+    for para in paragraphs:
+        # Strip HTML tags
+        text = re.sub(r"<.*?>", "", para).strip()
+        if not text or is_boilerplate(text):
+            continue
+        # Return first sentence (up to 260 chars)
+        sentence_match = re.search(r"(.+?[.!?])(?:\s|$)", text)
+        if sentence_match:
+            return sentence_match.group(1).strip()[:260]
+        if len(text) > 30:
+            return text[:260]
+    return "Daily market briefing with practical context for US and UK readers."
+
+
 def rebuild_all():
     all_briefs = sorted(list(BRIEFS_DIR.glob("*.html")))
     template_content = ARTICLE_TEMPLATE_PATH.read_text(encoding="utf-8")
@@ -28,35 +86,27 @@ def rebuild_all():
         # 2. Extract Summary / Description
         summary_match = re.search(r'<meta name="description" content="(.*?)"', content)
         
-        # 3. Extract Lede
-        lede_match = re.search(r"<!-- ARTICLE_LEDE -->(.*?)<!-- /ARTICLE_LEDE -->", content, re.DOTALL)
-        if not lede_match:
-            lede_match = re.search(r'bg-emerald/5 px-4 py-3 text-sm leading-relaxed text-slate-700 sm:text-base">\s*(.*?)\s*</p>', content, re.DOTALL)
-
-        # 4. Extract Body (Infinite Resilience Mode)
-        # We look for START and a flexible END tag (with or without slash)
-        body_match = re.search(r"<!-- ARTICLE_CONTENT_START -->(.*?)(?:<!-- /?ARTICLE_CONTENT_END -->|<!-- /ARTICLE_CONTENT_START -->)", content, re.DOTALL)
-        if not body_match:
-            # Fallback to standard section ID
-            body_match = re.search(r'<section id="article-body".*?>(.*?)</section>', content, re.DOTALL)
+        # 3. Extract Body
+        body_match = re.search(r'<section id="article-body".*?>(.*?)</section>', content, re.DOTALL)
         
-        # 5. Extract Date
+        # 4. Extract Date
         date_match = re.search(r"brief-(\d{4}-\d{2}-\d{2})", path.name)
         
-        if not all([headline_match, summary_match, lede_match, body_match, date_match]):
+        if not all([headline_match, summary_match, body_match, date_match]):
             print(f"  ERROR: Skip {path.name} - Missing data fields.")
             continue
             
-        headline = clean_text(headline_match.group(1).strip())
-        summary = clean_text(summary_match.group(1).strip())
-        lede = clean_text(lede_match.group(1).strip())
-        body = body_match.group(1).strip()
-            
-        # Cleanup
-        headline = re.sub(r'<.*?>', '', headline).strip()
+        # Clean headline and summary
+        headline = clean_text(re.sub(r'<.*?>', '', headline_match.group(1)).strip())
         headline = re.sub(r'<!--.*?-->', '', headline).strip()
-        body = re.sub(r'<!-- ARTICLE_CONTENT_(START|END) -->', '', body).strip()
-        body = re.sub(r'<!-- /ARTICLE_CONTENT_(START|END) -->', '', body).strip()
+        summary = clean_text(summary_match.group(1).strip())
+        
+        # Clean body - remove boilerplate paragraphs
+        body = body_match.group(1).strip()
+        body = clean_body_html(body)
+        
+        # Extract a clean lede from the cleaned body
+        lede = extract_clean_lede(body)
 
         # EMERGENCY VALIDATION
         if len(body) < 100 or "Content not found" in body:
@@ -64,7 +114,7 @@ def rebuild_all():
             continue
 
         publish_date = dt.datetime.strptime(date_match.group(1), "%Y-%m-%d")
-        print(f"  -> Found body starting with: '{body[:30]}...'")
+        print(f"  -> Headline: '{headline[:60]}...'")
         
         # Regenerate with new standardized markers
         new_html = update_article_from_template(
@@ -77,7 +127,7 @@ def rebuild_all():
             output_filename=path.name
         )
         
-        # Add cards
+        # Add navigation cards
         nav_links = get_nav_links(publish_date)
         new_html = replace_marker(new_html, "ARTICLE_NAVIGATION", nav_links)
         

@@ -22,19 +22,21 @@ BRIEFS_DIR = BASE_DIR / "briefs"
 
 
 def clean_text(text: str) -> str:
-    """Removes common repetitive market markers like 'FTSE 100 LIVE:' or 'UPDATE:'."""
+    """Strips LIVE/UPDATE/BREAKING prefixes only. Never strips regular headlines."""
     if not text:
         return ""
-    # Strip common prefixes like "FTSE 100 LIVE:", "MARKET LIVE:", "BREAKING:", "UPDATE:"
-    # Matches patterns like "PREFIX:", "PREFIX -", "PREFIX —" at the start of the string
-    pattern = r"^(?:[A-Z0-9\s&]+(?:\sLIVE|\sUPDATE|))[:\-\s—\.]+"
-    cleaned = re.sub(pattern, "", text, flags=re.IGNORECASE).strip()
-    
-    # Capitalize the first letter if it was stripped
+    # Match: "SOMETHING LIVE: ...", "BREAKING: ...", "UPDATE: ..." at string start
+    # Requires: ends in LIVE/UPDATE/BREAKING/ALERT + colon or dash separator
+    # Safe for: "Iran Talks", "Oil Falls as IEA...", "Stocks tick higher..."
+    cleaned = re.sub(
+        r"^(?:[\w ]{0,40}?\s+(?:LIVE|UPDATE|BREAKING|ALERT)|(?:BREAKING|UPDATE|LIVE|ALERT))\s*[:\-\u2014]\s+",
+        "",
+        text,
+        flags=re.IGNORECASE
+    ).strip()
     if cleaned:
         cleaned = cleaned[0].upper() + cleaned[1:]
     return cleaned
-
 
 def replace_marker(content: str, marker_name: str, value: str, keep_markers: bool = False) -> str:
     pattern = re.compile(
@@ -85,12 +87,13 @@ Requirements:
 6) Under "Key Takeaways", include 4-6 bullet points using markdown '-' lines.
 7) Under "Questions Investors Are Asking", include 3-5 lines that end with a question mark.
 8) Do not repeat the same sentence or paragraph wording.
+9) MANDATORY: Do NOT use boilerplate openings like "The current market landscape is witnessing..." or "Recent news indicates...". Start directly with the core development or a punchy observation.
 
 Output EXACTLY in this format:
 HEADLINE: <single compelling financial-news headline under 110 chars; no numbering, no generic labels, NO prefixes like 'FTSE 100 LIVE:' or 'MARKET UPDATE:'>
-SUMMARY: <1-2 sentence summary under 220 chars; NO prefixes or market markers>
+SUMMARY: <single punchy sentence under 220 chars summarizing the news; NO boilerplate intros>
 BRIEF:
-<plain text brief with multiple paragraphs and at least 1 H2 marker written as: ## Subheading>
+<plain text brief starting directly with news; multiple paragraphs and at least 1 H2 marker written as: ## Subheading>
 """.strip()
 
     base_messages = [
