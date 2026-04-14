@@ -6,7 +6,8 @@ from main import (
     ARTICLE_TEMPLATE_PATH, 
     update_article_from_template, 
     replace_marker, 
-    get_nav_links
+    get_nav_links,
+    clean_text
 )
 
 def rebuild_all():
@@ -46,9 +47,9 @@ def rebuild_all():
             print(f"  ERROR: Skip {path.name} - Missing data fields.")
             continue
             
-        headline = headline_match.group(1).strip()
-        summary = summary_match.group(1).strip()
-        lede = lede_match.group(1).strip()
+        headline = clean_text(headline_match.group(1).strip())
+        summary = clean_text(summary_match.group(1).strip())
+        lede = clean_text(lede_match.group(1).strip())
         body = body_match.group(1).strip()
             
         # Cleanup

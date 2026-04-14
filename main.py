@@ -21,6 +21,21 @@ GROQ_MODEL = os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile")
 BRIEFS_DIR = BASE_DIR / "briefs"
 
 
+def clean_text(text: str) -> str:
+    """Removes common repetitive market markers like 'FTSE 100 LIVE:' or 'UPDATE:'."""
+    if not text:
+        return ""
+    # Strip common prefixes like "FTSE 100 LIVE:", "MARKET LIVE:", "BREAKING:", "UPDATE:"
+    # Matches patterns like "PREFIX:", "PREFIX -", "PREFIX —" at the start of the string
+    pattern = r"^(?:[A-Z0-9\s&]+(?:\sLIVE|\sUPDATE|))[:\-\s—\.]+"
+    cleaned = re.sub(pattern, "", text, flags=re.IGNORECASE).strip()
+    
+    # Capitalize the first letter if it was stripped
+    if cleaned:
+        cleaned = cleaned[0].upper() + cleaned[1:]
+    return cleaned
+
+
 def replace_marker(content: str, marker_name: str, value: str, keep_markers: bool = False) -> str:
     pattern = re.compile(
         rf"(<!--\s*{re.escape(marker_name)}\s*-->)(.*?)(<!--\s*/{re.escape(marker_name)}\s*-->)",
@@ -72,8 +87,8 @@ Requirements:
 8) Do not repeat the same sentence or paragraph wording.
 
 Output EXACTLY in this format:
-HEADLINE: <single compelling financial-news headline under 110 chars; no numbering, no generic labels>
-SUMMARY: <1-2 sentence summary under 220 chars>
+HEADLINE: <single compelling financial-news headline under 110 chars; no numbering, no generic labels, NO prefixes like 'FTSE 100 LIVE:' or 'MARKET UPDATE:'>
+SUMMARY: <1-2 sentence summary under 220 chars; NO prefixes or market markers>
 BRIEF:
 <plain text brief with multiple paragraphs and at least 1 H2 marker written as: ## Subheading>
 """.strip()
@@ -116,8 +131,8 @@ BRIEF:
         if not headline_match or not summary_match or not brief_match:
             continue
 
-        headline = headline_match.group(1).strip()
-        summary = summary_match.group(1).strip()
+        headline = clean_text(headline_match.group(1).strip())
+        summary = clean_text(summary_match.group(1).strip())
         brief = brief_match.group(1).strip()
         if len(re.findall(r"\b\w+\b", brief)) >= 950:
             return headline, summary, brief

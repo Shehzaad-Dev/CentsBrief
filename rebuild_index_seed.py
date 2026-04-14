@@ -2,7 +2,7 @@ import datetime as dt
 import re
 from pathlib import Path
 
-from main import update_homepage
+from main import update_homepage, clean_text
 from seed_briefs import FALLBACK_HEADLINES, get_live_finance_headlines
 
 BASE = Path(__file__).resolve().parent
@@ -62,7 +62,9 @@ for i, headline in enumerate(headlines[:30]):
     )
 
 for filename, headline, summary, lede, publish_date in reversed(items):
-    index_html = update_homepage(index_html, headline, summary, lede, filename, publish_date)
+    clean_h = clean_text(headline)
+    clean_s = clean_text(summary)
+    index_html = update_homepage(index_html, clean_h, clean_s, lede, filename, publish_date)
 
 index_path.write_text(index_html, encoding="utf-8")
 print("Rebuilt index with 30 seeded entries.")
