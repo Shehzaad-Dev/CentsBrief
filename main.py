@@ -192,8 +192,10 @@ def brief_text_to_html(brief_text: str) -> str:
             close_list()
             heading_text = line[3:].strip()
             heading_class = "mt-10 border-l-4 border-emerald pl-3 text-xl font-extrabold text-navy sm:text-2xl"
-            if heading_text.lower() in {"key takeaways", "questions investors are asking"}:
+            if heading_text.lower() == "key takeaways":
                 heading_class = "mt-10 border-l-4 border-emerald pl-3 text-xl font-extrabold text-emerald sm:text-2xl"
+            elif heading_text.lower() == "questions investors are asking":
+                heading_class = "mt-10 border-l-4 border-black pl-3 text-xl font-extrabold text-black sm:text-2xl"
             blocks.append(f'<h2 class="{heading_class}">{html.escape(heading_text)}</h2>')
             continue
         if line.startswith("### "):
@@ -212,7 +214,7 @@ def brief_text_to_html(brief_text: str) -> str:
             flush_paragraph()
             close_list()
             blocks.append(
-                f'<p class="rounded-md bg-emerald/10 px-3 py-2"><strong class="text-base font-extrabold text-emerald sm:text-lg">{html.escape(line)}</strong></p>'
+                f'<p class="rounded-md bg-white border border-black px-3 py-2"><strong class="text-base font-extrabold text-black sm:text-lg">{html.escape(line)}</strong></p>'
             )
             continue
         para_buffer.append(line)
@@ -288,7 +290,10 @@ def generate_json_ld(headline: str, summary: str, brief_html: str, publish_date:
 
     # FAQPage Schema (extracting questions)
     faq_schema = None
-    questions = re.findall(r'<p class="rounded-md bg-emerald/10 px-3 py-2"><strong class="text-base font-extrabold text-emerald sm:text-lg">(.*?)</strong></p>', brief_html)
+    questions = re.findall(
+        r'<p class="rounded-md (?:bg-emerald/10 px-3 py-2|bg-white border border-black px-3 py-2)"><strong class="text-base font-extrabold (?:text-emerald|text-black) sm:text-lg">(.*?)</strong></p>',
+        brief_html,
+    )
     if questions:
         faq_schema = {
             "@context": "https://schema.org",

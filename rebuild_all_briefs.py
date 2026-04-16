@@ -44,6 +44,17 @@ def clean_body_html(body: str) -> str:
     """Remove known boilerplate <p> paragraphs from the body HTML."""
     for pattern in BOILERPLATE_PARAGRAPHS:
         body = re.sub(pattern, "", body, flags=re.IGNORECASE | re.DOTALL)
+    # Update styling for Questions Investors Are Asking heading
+    body = body.replace(
+        'class="mt-10 border-l-4 border-emerald pl-3 text-xl font-extrabold text-emerald sm:text-2xl">Questions Investors Are Asking',
+        'class="mt-10 border-l-4 border-black pl-3 text-xl font-extrabold text-black sm:text-2xl">Questions Investors Are Asking'
+    )
+    # Update styling for Question blocks
+    body = body.replace(
+        'class="rounded-md bg-emerald/10 px-3 py-2"><strong class="text-base font-extrabold text-emerald sm:text-lg"',
+        'class="rounded-md bg-white border border-black px-3 py-2"><strong class="text-base font-extrabold text-black sm:text-lg"'
+    )
+    
     # Remove duplicate <!-- BRIEF_BODY --> markers that sometimes appear
     body = re.sub(r"<!-- BRIEF_BODY -->\s*<!-- BRIEF_BODY -->", "<!-- BRIEF_BODY -->", body)
     body = re.sub(r"<!-- /BRIEF_BODY -->\s*<!-- /BRIEF_BODY -->", "<!-- /BRIEF_BODY -->", body)
