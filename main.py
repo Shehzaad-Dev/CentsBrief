@@ -81,6 +81,7 @@ Requirements:
    - ## Why Markets Reacted
    - ## Impact on US and UK Households
    - ## What This Means for Your Wallet
+   - ## What to Watch Next
    - ## Key Takeaways
    - ## Questions Investors Are Asking
 5) Avoid financial advice promises, hype, and sensationalism.
@@ -196,7 +197,8 @@ def brief_text_to_html(brief_text: str) -> str:
                 heading_class = "mt-10 border-l-4 border-emerald pl-3 text-xl font-extrabold text-emerald sm:text-2xl"
             elif heading_text.lower() == "questions investors are asking":
                 heading_class = "mt-10 border-l-4 border-black pl-3 text-xl font-extrabold text-black sm:text-2xl"
-            blocks.append(f'<h2 class="{heading_class}">{html.escape(heading_text)}</h2>')
+            heading_id = re.sub(r"[^a-z0-9]+", "-", heading_text.lower()).strip("-")
+            blocks.append(f'<h2 id="{heading_id}" class="{heading_class}">{html.escape(heading_text)}</h2>')
             continue
         if line.startswith("### "):
             flush_paragraph()
@@ -233,6 +235,38 @@ def extract_lede_from_brief_text(brief_text: str) -> str:
     sentence_match = re.search(r"(.+?[.!?])(?:\s|$)", plain)
     lede = sentence_match.group(1).strip() if sentence_match else plain[:220].strip()
     return lede[:260]
+
+
+def generate_toc_from_brief_html(brief_html: str) -> str:
+    """
+    Builds a small table-of-contents from the rendered H2 headings.
+    Requires that H2 headings have stable `id` attributes.
+    """
+    items: list[tuple[str, str]] = []
+
+    for m in re.finditer(r'<h2[^>]*id="([^"]+)"[^>]*>(.*?)</h2>', brief_html, flags=re.DOTALL):
+        heading_id = m.group(1).strip()
+        heading_text = m.group(2).strip()
+        # Heading text is already HTML-escaped by brief_text_to_html; keep as-is for display.
+        if heading_id and heading_text:
+            items.append((heading_id, heading_text))
+
+    if not items:
+        return ""
+
+    lis = "\n        ".join(
+        [
+            f'<li><a class="text-emerald hover:underline" href="#{heading_id}">{heading_text}</a></li>'
+            for heading_id, heading_text in items
+        ]
+    )
+
+    return (
+        '<nav class="mt-2 mb-8 rounded-xl border border-slate-200 bg-slate-50 p-4">'
+        '<h2 class="text-sm font-bold uppercase tracking-widest text-slate-400">In this brief</h2>'
+        f'<ul class="mt-3 space-y-2 text-sm">{lis}</ul>'
+        "</nav>"
+    )
 
 
 def minify_html(content: str) -> str:
@@ -322,11 +356,22 @@ def extract_article_info(path: Path) -> Tuple[str, str]:
     if not path.exists():
         return "Market Insight Archive", "Read our previous market analysis and briefings."
     content = path.read_text(encoding="utf-8")
-    headline_match = re.search(r"<!-- ARTICLE_HEADLINE -->(.*?)<!-- /ARTICLE_HEADLINE -->", content)
-    lede_match = re.search(r"<!-- ARTICLE_LEDE -->(.*?)<!-- /ARTICLE_LEDE -->", content)
-    
-    headline = headline_match.group(1).strip() if headline_match else "Market Briefing"
-    teaser = lede_match.group(1).strip() if lede_match else "Daily financial summary for US and UK readers."
+
+    # In generated pages the HTML comments are removed, so we extract from rendered elements.
+    headline_match = re.search(r"<h1[^>]*>\s*(.*?)\s*</h1>", content, flags=re.DOTALL)
+    lede_match = re.search(
+        r'<p class="mt-5 rounded-lg border-l-4 border-emerald bg-emerald/5 px-4 py-3 text-sm leading-relaxed text-slate-700 sm:text-base">\s*(.*?)\s*</p>',
+        content,
+        flags=re.DOTALL,
+    )
+
+    headline = html.unescape(headline_match.group(1).strip()) if headline_match else "Market Briefing"
+    teaser = (
+        html.unescape(lede_match.group(1).strip())
+        if lede_match
+        else "Daily financial summary for US and UK readers."
+    )
+
     return headline, teaser
 
 
@@ -392,6 +437,7 @@ def update_article_from_template(
     canonical_url = f"{SITE_BASE_URL}/briefs/{clean_filename}"
     read_time = f"{max(4, round(TARGET_WORD_COUNT / 220))} min read"
 
+    toc_html = generate_toc_from_brief_html(brief_html)
     json_ld = generate_json_ld(headline, summary, brief_html, publish_date, canonical_url)
 
     article_html = template_content
@@ -402,8 +448,10 @@ def update_article_from_template(
     article_html = replace_marker(article_html, "OG_TITLE", f"{headline} | CentsBrief")
     article_html = replace_marker(article_html, "OG_DESCRIPTION", summary)
     article_html = replace_marker(article_html, "OG_URL", canonical_url)
+    article_html = replace_marker(article_html, "OG_IMAGE", f"{SITE_BASE_URL}/assets/og-default.jpg")
     article_html = replace_marker(article_html, "TWITTER_TITLE", f"{headline} | CentsBrief")
     article_html = replace_marker(article_html, "TWITTER_DESCRIPTION", summary)
+    article_html = replace_marker(article_html, "TWITTER_IMAGE", f"{SITE_BASE_URL}/assets/og-default.jpg")
     article_html = replace_marker(article_html, "PUBLISHED_ISO", published_iso)
     article_html = replace_marker(article_html, "MODIFIED_ISO", published_iso)
     article_html = replace_marker(article_html, "ARTICLE_HEADLINE", headline)
@@ -412,6 +460,7 @@ def update_article_from_template(
     article_html = replace_marker(article_html, "PUBLISHED_HUMAN", published_human)
     article_html = replace_marker(article_html, "LAST_UPDATED", "05:00 UTC")
     article_html = replace_marker(article_html, "READ_TIME", read_time)
+    article_html = replace_marker(article_html, "ARTICLE_TOC", toc_html)
     article_html = replace_marker(article_html, "RELATED_INSIGHTS", "")
 
     # Inject article content while preserving markers
