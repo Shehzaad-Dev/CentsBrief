@@ -1,1 +1,5 @@
+﻿ownerdomain=centsbreif.online
+managerdomain=revbid.net
+revbid.net, 14842, DIRECT
+# RevBid setup
 google.com, pub-6274849473716814, DIRECT, f08c47fec0942fa0
