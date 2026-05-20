@@ -81,22 +81,93 @@
   </header>
   <div class="pt-32 sm:pt-36"></div>
 
-  <!-- Top ad containers -->
-  <div id="ad-top" class="mx-auto my-4 max-w-7xl px-4 text-center">
-    <div id="container-0fa0668058a2b1d6ba7e6bdc60f500cf" style="margin:0 auto;">
-      <script async="async" data-cfasync="false" data-container="container-0fa0668058a2b1d6ba7e6bdc60f500cf" src="https://windowthrilling.com/0fa0668058a2b1d6ba7e6bdc60f500cf/invoke.js"></script>
-    </div>
-    <div id="container-native-1ff240d1e21e4a53e85e962e4298dcf1" class="hidden md:block mt-4" style="margin:0 auto; max-width:728px;">
-      <script>
-        atOptions = {
-          'key' : '1ff240d1e21e4a53e85e962e4298dcf1',
-          'format' : 'iframe',
-          'height' : 90,
-          'width' : 728,
-          'params' : {}
-        };
-      </script>
-      <script data-container="container-native-1ff240d1e21e4a53e85e962e4298dcf1" src="https://windowthrilling.com/1ff240d1e21e4a53e85e962e4298dcf1/invoke.js"></script>
+  <!-- Unified top ad strip: shows all provided ads in a single horizontal row -->
+  <div id="top-ads-strip" class="w-full bg-white border-b border-slate-200">
+    <div class="mx-auto max-w-7xl px-4 py-2">
+      <div id="top-ads-row" class="flex gap-4 items-start overflow-x-auto" style="-webkit-overflow-scrolling:touch;">
+        <!-- Social / async container -->
+        <div id="container-0fa0668058a2b1d6ba7e6bdc60f500cf" class="flex-shrink-0" style="min-width:120px;">
+          <script async="async" data-cfasync="false" data-container="container-0fa0668058a2b1d6ba7e6bdc60f500cf" src="https://windowthrilling.com/0fa0668058a2b1d6ba7e6bdc60f500cf/invoke.js"></script>
+        </div>
+        <!-- Native 728x90 (hidden on small screens) -->
+        <div id="container-native-1ff240d1e21e4a53e85e962e4298dcf1" class="flex-shrink-0 hidden md:block" style="min-width:728px;">
+          <script>
+            atOptions = {
+              'key' : '1ff240d1e21e4a53e85e962e4298dcf1',
+              'format' : 'iframe',
+              'height' : 90,
+              'width' : 728,
+              'params' : {}
+            };
+          </script>
+          <script data-container="container-native-1ff240d1e21e4a53e85e962e4298dcf1" src="https://windowthrilling.com/1ff240d1e21e4a53e85e962e4298dcf1/invoke.js"></script>
+        </div>
+        <!-- Center 300x250 -->
+        <div id="ad-center" class="flex-shrink-0" style="min-width:300px;">
+          <script>
+            atOptions = {
+              'key' : 'ed9b28f7d1cbe1555e1d255e7ae522ec',
+              'format' : 'iframe',
+              'height' : 250,
+              'width' : 300,
+              'params' : {}
+            };
+          </script>
+          <script data-container="ad-center" src="https://windowthrilling.com/ed9b28f7d1cbe1555e1d255e7ae522ec/invoke.js"></script>
+        </div>
+        <!-- Inline 468x60 -->
+        <div id="container-84b19df197f84e68f04410904d49c06a" class="flex-shrink-0" style="min-width:468px;">
+          <script>
+            atOptions = {
+              'key' : '84b19df197f84e68f04410904d49c06a',
+              'format' : 'iframe',
+              'height' : 60,
+              'width' : 468,
+              'params' : {}
+            };
+          </script>
+          <script data-container="container-84b19df197f84e68f04410904d49c06a" src="https://windowthrilling.com/84b19df197f84e68f04410904d49c06a/invoke.js"></script>
+        </div>
+        <!-- Sidebar tall 160x600 (desktop only) -->
+        <div id="container-0cf6a5fcef84b22149045eba49a339a6" class="flex-shrink-0 hidden lg:block" style="min-width:160px;">
+          <script>
+            atOptions = {
+              'key' : '0cf6a5fcef84b22149045eba49a339a6',
+              'format' : 'iframe',
+              'height' : 600,
+              'width' : 160,
+              'params' : {}
+            };
+          </script>
+          <script data-container="container-0cf6a5fcef84b22149045eba49a339a6" src="https://windowthrilling.com/0cf6a5fcef84b22149045eba49a339a6/invoke.js"></script>
+        </div>
+        <!-- Sidebar 160x300 -->
+        <div id="container-0b5e94b84cc938f41767a36b5d887eb0" class="flex-shrink-0 hidden lg:block" style="min-width:160px;">
+          <script>
+            atOptions = {
+              'key' : '0b5e94b84cc938f41767a36b5d887eb0',
+              'format' : 'iframe',
+              'height' : 300,
+              'width' : 160,
+              'params' : {}
+            };
+          </script>
+          <script data-container="container-0b5e94b84cc938f41767a36b5d887eb0" src="https://windowthrilling.com/0b5e94b84cc938f41767a36b5d887eb0/invoke.js"></script>
+        </div>
+        <!-- Mobile 320x50 (visible on small screens) -->
+        <div id="container-ad-mobile-320x50" class="flex-shrink-0 block lg:hidden" style="min-width:320px;">
+          <script>
+            atOptions = {
+              'key' : 'ad9fdedc9787e193e24d4341c9137ff5',
+              'format' : 'iframe',
+              'height' : 50,
+              'width' : 320,
+              'params' : {}
+            };
+          </script>
+          <script data-container="container-ad-mobile-320x50" src="https://windowthrilling.com/ad9fdedc9787e193e24d4341c9137ff5/invoke.js"></script>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -115,21 +186,7 @@
       </a>
     </section>
 
-    <!-- Center ad placement -->
-    <div class="my-8 flex justify-center">
-      <div id="ad-center" style="width:728px; max-width:100%;">
-        <script>
-          atOptions = {
-            'key' : 'ed9b28f7d1cbe1555e1d255e7ae522ec',
-            'format' : 'iframe',
-            'height' : 250,
-            'width' : 300,
-            'params' : {}
-          };
-        </script>
-        <script data-container="ad-center" src="https://windowthrilling.com/ed9b28f7d1cbe1555e1d255e7ae522ec/invoke.js"></script>
-      </div>
-    </div>
+    <!-- Center ad placement (moved to top strip) -->
 
     <section class="mt-10 rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200 sm:p-8" aria-labelledby="latest-briefs-heading">
       <p class="text-xs font-semibold uppercase tracking-[0.2em] text-emerald">News Feed</p>
@@ -139,66 +196,10 @@
         <!-- articles... (unchanged) -->
       </div>
       <!-- RECENT_BRIEFS_END -->
-      <!-- inline banner between briefs -->
-      <div id="ad-between" class="mt-6 flex justify-center">
-        <div id="container-84b19df197f84e68f04410904d49c06a" class="w-full max-w-3xl">
-          <script>
-            atOptions = {
-              'key' : '84b19df197f84e68f04410904d49c06a',
-              'format' : 'iframe',
-              'height' : 60,
-              'width' : 468,
-              'params' : {}
-            };
-          </script>
-          <script data-container="container-84b19df197f84e68f04410904d49c06a" src="https://windowthrilling.com/84b19df197f84e68f04410904d49c06a/invoke.js"></script>
-        </div>
-      </div>
+      <!-- inline banner between briefs (moved to top strip) -->
     </section>
   </main>
-  <!-- Sidebar-style ad stack (right side visual, hidden on small screens) -->
-  <div class="mx-auto max-w-7xl px-4 lg:flex lg:justify-end lg:pr-8">
-    <div class="hidden lg:block space-y-6" style="width:160px;">
-      <div id="container-0cf6a5fcef84b22149045eba49a339a6" class="w-full">
-        <script>
-          atOptions = {
-            'key' : '0cf6a5fcef84b22149045eba49a339a6',
-            'format' : 'iframe',
-            'height' : 600,
-            'width' : 160,
-            'params' : {}
-          };
-        </script>
-        <script data-container="container-0cf6a5fcef84b22149045eba49a339a6" src="https://windowthrilling.com/0cf6a5fcef84b22149045eba49a339a6/invoke.js"></script>
-      </div>
-      <div id="container-0b5e94b84cc938f41767a36b5d887eb0" class="w-full">
-        <script>
-          atOptions = {
-            'key' : '0b5e94b84cc938f41767a36b5d887eb0',
-            'format' : 'iframe',
-            'height' : 300,
-            'width' : 160,
-            'params' : {}
-          };
-        </script>
-        <script data-container="container-0b5e94b84cc938f41767a36b5d887eb0" src="https://windowthrilling.com/0b5e94b84cc938f41767a36b5d887eb0/invoke.js"></script>
-      </div>
-    </div>
-    <div class="block lg:hidden mt-6 px-4">
-      <div id="container-ad-mobile-320x50">
-        <script>
-          atOptions = {
-            'key' : 'ad9fdedc9787e193e24d4341c9137ff5',
-            'format' : 'iframe',
-            'height' : 50,
-            'width' : 320,
-            'params' : {}
-          };
-        </script>
-        <script data-container="container-ad-mobile-320x50" src="https://windowthrilling.com/ad9fdedc9787e193e24d4341c9137ff5/invoke.js"></script>
-      </div>
-    </div>
-  </div>
+  <!-- Sidebar and mobile ad containers moved into top strip -->
   <footer class="bg-navy pb-12 pt-10 text-slate-200">
     <div class="mx-auto grid w-full max-w-7xl gap-10 px-4 sm:px-6 lg:grid-cols-2 lg:px-8">
       <section>
@@ -253,6 +254,36 @@
       }
     });
     document.getElementById("year").textContent = new Date().getFullYear();
+  </script>
+  <script>
+    // Ad auto-refresh configuration
+    // Set to true to enable automatic ad reloads every `adRefreshIntervalMs` milliseconds.
+    // If the provider rotates creatives server-side, you can keep this false.
+    window.adAutoRefresh = false; // change to true if you want 1-minute refresh
+    window.adRefreshIntervalMs = 60000; // default 60,000 ms (1 minute)
+
+    function reloadAdContainers() {
+      const scripts = document.querySelectorAll('script[data-container]');
+      scripts.forEach((oldScript) => {
+        const containerName = oldScript.getAttribute('data-container');
+        const src = oldScript.getAttribute('src');
+        const parent = oldScript.parentNode;
+        // remove old script
+        oldScript.remove();
+        // create fresh script element
+        const s = document.createElement('script');
+        s.setAttribute('data-container', containerName);
+        s.src = src;
+        s.async = true;
+        parent.appendChild(s);
+      });
+    }
+
+    if (window.adAutoRefresh) {
+      setInterval(() => {
+        try { reloadAdContainers(); } catch (e) { console.error('ad reload error', e); }
+      }, window.adRefreshIntervalMs);
+    }
   </script>
 </body>
 </html>
