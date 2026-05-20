@@ -12,37 +12,37 @@
           <script>
             atOptions = { 'key':'1ff240d1e21e4a53e85e962e4298dcf1', 'format':'iframe', 'height':90, 'width':728, 'params':{} };
           </script>
-          <script data-container="container-native-1ff240d1e21e4a53e85e962e4298dcf1" src="https://windowthrilling.com/1ff240d1e21e4a53e85e962e4298dcf1/invoke.js"></script>
+          <script data-container="container-native-1ff240d1e21e4a53e85e962e4298dcf1" data-atoptions='{"key":"1ff240d1e21e4a53e85e962e4298dcf1","format":"iframe","height":90,"width":728,"params":{}}' src="https://windowthrilling.com/1ff240d1e21e4a53e85e962e4298dcf1/invoke.js"></script>
         </div>
         <div id="ad-center" class="flex-shrink-0" style="min-width:300px;">
           <script>
             atOptions = { 'key':'ed9b28f7d1cbe1555e1d255e7ae522ec', 'format':'iframe', 'height':250, 'width':300, 'params':{} };
           </script>
-          <script data-container="ad-center" src="https://windowthrilling.com/ed9b28f7d1cbe1555e1d255e7ae522ec/invoke.js"></script>
+          <script data-container="ad-center" data-atoptions='{"key":"ed9b28f7d1cbe1555e1d255e7ae522ec","format":"iframe","height":250,"width":300,"params":{}}' src="https://windowthrilling.com/ed9b28f7d1cbe1555e1d255e7ae522ec/invoke.js"></script>
         </div>
         <div id="container-84b19df197f84e68f04410904d49c06a" class="flex-shrink-0" style="min-width:468px;">
           <script>
             atOptions = { 'key':'84b19df197f84e68f04410904d49c06a', 'format':'iframe', 'height':60, 'width':468, 'params':{} };
           </script>
-          <script data-container="container-84b19df197f84e68f04410904d49c06a" src="https://windowthrilling.com/84b19df197f84e68f04410904d49c06a/invoke.js"></script>
+          <script data-container="container-84b19df197f84e68f04410904d49c06a" data-atoptions='{"key":"84b19df197f84e68f04410904d49c06a","format":"iframe","height":60,"width":468,"params":{}}' src="https://windowthrilling.com/84b19df197f84e68f04410904d49c06a/invoke.js"></script>
         </div>
         <div id="container-0cf6a5fcef84b22149045eba49a339a6" class="flex-shrink-0 hidden lg:block" style="min-width:160px;">
           <script>
             atOptions = { 'key':'0cf6a5fcef84b22149045eba49a339a6', 'format':'iframe', 'height':600, 'width':160, 'params':{} };
           </script>
-          <script data-container="container-0cf6a5fcef84b22149045eba49a339a6" src="https://windowthrilling.com/0cf6a5fcef84b22149045eba49a339a6/invoke.js"></script>
+          <script data-container="container-0cf6a5fcef84b22149045eba49a339a6" data-atoptions='{"key":"0cf6a5fcef84b22149045eba49a339a6","format":"iframe","height":600,"width":160,"params":{}}' src="https://windowthrilling.com/0cf6a5fcef84b22149045eba49a339a6/invoke.js"></script>
         </div>
         <div id="container-0b5e94b84cc938f41767a36b5d887eb0" class="flex-shrink-0 hidden lg:block" style="min-width:160px;">
           <script>
             atOptions = { 'key':'0b5e94b84cc938f41767a36b5d887eb0', 'format':'iframe', 'height':300, 'width':160, 'params':{} };
           </script>
-          <script data-container="container-0b5e94b84cc938f41767a36b5d887eb0" src="https://windowthrilling.com/0b5e94b84cc938f41767a36b5d887eb0/invoke.js"></script>
+          <script data-container="container-0b5e94b84cc938f41767a36b5d887eb0" data-atoptions='{"key":"0b5e94b84cc938f41767a36b5d887eb0","format":"iframe","height":300,"width":160,"params":{}}' src="https://windowthrilling.com/0b5e94b84cc938f41767a36b5d887eb0/invoke.js"></script>
         </div>
         <div id="container-ad-mobile-320x50" class="flex-shrink-0 block lg:hidden" style="min-width:320px;">
           <script>
             atOptions = { 'key':'ad9fdedc9787e193e24d4341c9137ff5', 'format':'iframe', 'height':50, 'width':320, 'params':{} };
           </script>
-          <script data-container="container-ad-mobile-320x50" src="https://windowthrilling.com/ad9fdedc9787e193e24d4341c9137ff5/invoke.js"></script>
+          <script data-container="container-ad-mobile-320x50" data-atoptions='{"key":"ad9fdedc9787e193e24d4341c9137ff5","format":"iframe","height":50,"width":320,"params":{}}' src="https://windowthrilling.com/ad9fdedc9787e193e24d4341c9137ff5/invoke.js"></script>
         </div>
       </div>
     </div>
@@ -52,15 +52,23 @@
     window.adAutoRefresh = true;
     window.adRefreshIntervalMs = 60000;
     function reloadAdContainers() {
-      const scripts = document.querySelectorAll('script[data-container]');
+      const scripts = Array.from(document.querySelectorAll('script[data-container]'));
       scripts.forEach((oldScript) => {
-        const containerName = oldScript.getAttribute('data-container');
-        const src = oldScript.getAttribute('src');
+        const containerName = oldScript.dataset.container;
+        const src = oldScript.src;
         const parent = oldScript.parentNode;
-        if (!src || !parent) return;
+        const atOptionsJson = oldScript.dataset.atoptions;
+        if (!src || !parent || !atOptionsJson) return;
         oldScript.remove();
+        try {
+          window.atOptions = JSON.parse(atOptionsJson);
+        } catch (parseError) {
+          console.error('ad reload options parse error', parseError, atOptionsJson);
+          return;
+        }
         const s = document.createElement('script');
         s.setAttribute('data-container', containerName);
+        s.setAttribute('data-atoptions', atOptionsJson);
         s.src = src;
         s.async = true;
         parent.appendChild(s);
