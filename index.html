@@ -259,8 +259,16 @@
     // Ad auto-refresh configuration
     // Set to true to enable automatic ad reloads every `adRefreshIntervalMs` milliseconds.
     // If the provider rotates creatives server-side, you can keep this false.
-    window.adAutoRefresh = false; // change to true if you want 1-minute refresh
+    // Enable client-side ad auto-refresh. Default set to 1 minute.
+    // If the ad provider already rotates creatives server-side, set
+    // `window.adProviderAutoRefresh = true` (provider-specific) to increase interval.
+    window.adAutoRefresh = true; // enabled by default per request
     window.adRefreshIntervalMs = 60000; // default 60,000 ms (1 minute)
+
+    // If provider indicates server-side rotation, use a slightly higher interval
+    if (window.adProviderAutoRefresh === true) {
+      window.adRefreshIntervalMs = Math.max(window.adRefreshIntervalMs, 120000); // 2 minutes
+    }
 
     function reloadAdContainers() {
       const scripts = document.querySelectorAll('script[data-container]');
