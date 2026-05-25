@@ -5,6 +5,16 @@ on:
     # 05:00 UTC daily
     - cron: "0 5 * * *"
   workflow_dispatch:
+    inputs:
+      catch_up_days:
+        description: "Backfill missing briefs for the last N days (max 5)"
+        required: false
+        default: "3"
+      patch_mgid:
+        description: "Patch MGID head script onto index and recent briefs"
+        required: false
+        default: "true"
+        type: boolean
 
 permissions:
   contents: write
@@ -31,11 +41,12 @@ jobs:
         run: |
           if [ -n "$GROQ_API_KEY_SECRET" ]; then
             echo "GROQ_API_KEY=$GROQ_API_KEY_SECRET" >> "$GITHUB_ENV"
+            echo "Groq secret: GROQ_API_KEY is set."
           elif [ -n "$GROQ_API_KEY_LEGACY" ]; then
             echo "GROQ_API_KEY=$GROQ_API_KEY_LEGACY" >> "$GITHUB_ENV"
-            echo "Using legacy secret name GroqAPI. Please add GROQ_API_KEY in repo secrets."
+            echo "Groq secret: using legacy name GroqAPI (rename to GROQ_API_KEY when you can)."
           else
-            echo "::error::Missing Groq API key. Add repository secret GROQ_API_KEY (Settings → Secrets and variables → Actions)."
+            echo "::error::Missing Groq API key. In GitHub open Settings → Secrets and variables → Actions → New repository secret → Name: GROQ_API_KEY → paste your key from https://console.groq.com/keys"
             exit 1
           fi
 
@@ -57,24 +68,30 @@ jobs:
           print("RSS OK:", titles)
           PY
 
-      - name: Generate daily brief
+      - name: Patch MGID markup on site pages
+        if: github.event_name == 'workflow_dispatch' && inputs.patch_mgid == true
+        run: python main.py --patch-mgid --sync-homepage-only
+
+      - name: Generate daily brief (with catch-up)
         env:
           GROQ_MODEL: llama-3.3-70b-versatile
           GROQ_FALLBACK_MODEL: llama-3.1-8b-instant
           SITE_BASE_URL: https://centsbreif.online
           BRIEF_RETENTION_DAYS: "60"
           MIN_BRIEF_WORDS: "800"
-        run: python main.py
+        run: |
+          CATCH_UP="${{ github.event_name == 'workflow_dispatch' && inputs.catch_up_days || '3' }}"
+          python main.py --catch-up-days "$CATCH_UP" --patch-mgid
 
       - name: Commit and push if changed
         run: |
           if [[ -n "$(git status --porcelain)" ]]; then
             git config user.name "github-actions[bot]"
             git config user.email "github-actions[bot]@users.noreply.github.com"
-            git add index.html briefs sitemap.xml robots.txt
+            git add index.html briefs sitemap.xml robots.txt article-template.html mgid.config.json main.py
             git ls-files --deleted | grep -E '^briefs/' | xargs -r git rm -f
             git ls-files | grep '^brief-' | xargs -r git rm -f
-            git commit -m "chore: publish daily automated finance brief and clean up archive"
+            git commit -m "chore: publish daily automated finance brief and MGID/SEO updates"
             git push
           else
             echo "No changes detected."

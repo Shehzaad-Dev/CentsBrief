@@ -21,19 +21,9 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://centsbreif.online/index.ads-merged</loc>
-    <lastmod>2026-05-25</lastmod>
-    <priority>0.7</priority>
-  </url>
-  <url>
     <loc>https://centsbreif.online/</loc>
     <lastmod>2026-05-25</lastmod>
     <priority>1.0</priority>
-  </url>
-  <url>
-    <loc>https://centsbreif.online/monetag</loc>
-    <lastmod>2026-05-25</lastmod>
-    <priority>0.7</priority>
   </url>
   <url>
     <loc>https://centsbreif.online/briefs/brief-2026-05-23-markets-rebound-amid-ai-plays</loc>
