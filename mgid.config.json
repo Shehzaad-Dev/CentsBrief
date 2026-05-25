@@ -1,7 +1,10 @@
 {
   "site_id": "1097226",
-  "widget_id": "2017365",
-  "amp_website": "1097226",
-  "amp_widget": "2017365",
-  "_comment": "AMP embed is documented in amp-mgid.html for a later phase."
+  "home_top_widget_id": "2017365",
+  "article_infeed_widget_id": "2017365",
+  "article_bottom_widget_id": "2017365",
+  "enable_amp": false,
+  "_comment_home": "Homepage: only one MGID unit — top banner (loads immediately, not lazy).",
+  "_comment_articles": "Brief pages: in-article + bottom units load when scrolled near (lazy). Paste separate dashboard widget IDs here when you create them.",
+  "_comment_amp": "AMP is off — centsbreif.online has no AMP pages. See amp-mgid.html if you add AMP later."
 }

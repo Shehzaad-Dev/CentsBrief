@@ -1,6 +1,8 @@
 /**
- * MGID: one _mgc.load per page. Above-fold (.mgid-slot--eager) loads immediately;
- * below-fold slots load when near viewport (lazy, better CWV + viewability).
+ * CentsBrief MGID loader
+ * - Homepage top banner (.mgid-slot--eager): loads as soon as the page is ready
+ * - Article units (.mgid-slot--lazy): load when the slot is near the viewport
+ * - One _mgc.load per page (MGID requirement)
  */
 (function () {
   var loaded = false;
@@ -14,17 +16,9 @@
     })(window, "_mgq");
   }
 
-  function init() {
-    var eager = document.querySelectorAll(".mgid-slot--eager");
-    if (eager.length) {
-      triggerMgidLoad();
-    }
-
+  function observeLazySlots() {
     var lazy = document.querySelectorAll(".mgid-slot--lazy");
-    if (!lazy.length) {
-      if (!eager.length) triggerMgidLoad();
-      return;
-    }
+    if (!lazy.length) return;
 
     if (!("IntersectionObserver" in window)) {
       triggerMgidLoad();
@@ -41,11 +35,22 @@
           }
         }
       },
-      { rootMargin: "320px 0px", threshold: 0.01 }
+      { rootMargin: "280px 0px", threshold: 0.01 }
     );
 
     for (var j = 0; j < lazy.length; j++) {
       observer.observe(lazy[j]);
+    }
+  }
+
+  function init() {
+    var eager = document.querySelectorAll(".mgid-slot--eager");
+    if (eager.length) {
+      triggerMgidLoad();
+    }
+    observeLazySlots();
+    if (!eager.length && !document.querySelectorAll(".mgid-slot--lazy").length) {
+      return;
     }
   }
 

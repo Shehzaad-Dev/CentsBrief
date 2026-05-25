@@ -1,4 +1,4 @@
-"""MGID sitewide integration: head loader, widget slots, lazy load, page patching."""
+"""MGID: homepage top banner (eager) + lazy units on article pages only."""
 from __future__ import annotations
 
 import html
@@ -40,9 +40,10 @@ MGID_LOADER = '<script src="/assets/mgid-lazy.js" defer></script>'
 def load_mgid_config() -> dict:
     defaults = {
         "site_id": "1097226",
-        "widget_id": "2017365",
-        "amp_website": "1097226",
-        "amp_widget": "2017365",
+        "home_top_widget_id": "2017365",
+        "article_infeed_widget_id": "2017365",
+        "article_bottom_widget_id": "2017365",
+        "enable_amp": False,
     }
     if not MGID_CONFIG_PATH.exists():
         return defaults
@@ -53,9 +54,17 @@ def load_mgid_config() -> dict:
     return {**defaults, **{k: v for k, v in data.items() if not str(k).startswith("_")}}
 
 
-def mgid_widget_id(cfg: dict | None = None) -> str:
+def widget_for_slot(slot_id: str, cfg: dict | None = None) -> str:
     cfg = cfg or load_mgid_config()
-    return str(cfg.get("widget_id") or cfg.get("in_article_widget_id") or "2017365").strip()
+    keys = {
+        "home-top": "home_top_widget_id",
+        "article-in-article": "article_infeed_widget_id",
+        "article-bottom": "article_bottom_widget_id",
+    }
+    key = keys.get(slot_id)
+    if key and cfg.get(key):
+        return str(cfg[key]).strip()
+    return str(cfg.get("widget_id") or "2017365").strip()
 
 
 def mgid_site_id(cfg: dict | None = None) -> str:
@@ -78,8 +87,9 @@ def mgid_slot(
     eager: bool = False,
     layout: str = "infeed",
     cfg: dict | None = None,
+    widget_id: str | None = None,
 ) -> str:
-    wid = html.escape(mgid_widget_id(cfg))
+    wid = html.escape(widget_id or widget_for_slot(slot_id, cfg))
     mode = "mgid-slot--eager" if eager else "mgid-slot--lazy"
     return (
         f'<div class="mgid-ad-slot {mode} mgid-layout--{layout}" '
@@ -88,41 +98,47 @@ def mgid_slot(
     )
 
 
-def home_slots(cfg: dict | None = None) -> dict[str, str]:
-    return {
-        "top": mgid_slot("home-top", eager=True, layout="banner", cfg=cfg),
-        "after_hero": mgid_slot("home-after-hero", layout="infeed", cfg=cfg),
-        "sidebar": mgid_slot("home-sidebar", eager=True, layout="sidebar", cfg=cfg),
-        "pre_footer": mgid_slot("home-pre-footer", layout="infeed", cfg=cfg),
-    }
+def home_top_slot(cfg: dict | None = None) -> str:
+    return mgid_slot(
+        "home-top",
+        eager=True,
+        layout="banner",
+        cfg=cfg,
+        widget_id=widget_for_slot("home-top", cfg),
+    )
 
 
 def article_slots(cfg: dict | None = None) -> dict[str, str]:
     return {
-        "top": mgid_slot("article-top", eager=True, layout="banner", cfg=cfg),
-        "under_lede": mgid_slot("article-under-lede", eager=True, layout="infeed", cfg=cfg),
-        "in_article": mgid_slot("article-in-article", layout="infeed", cfg=cfg),
-        "mid": mgid_slot("article-mid", layout="infeed", cfg=cfg),
-        "bottom": mgid_slot("article-bottom", layout="infeed", cfg=cfg),
-        "sidebar": mgid_slot("article-sidebar", eager=True, layout="sidebar", cfg=cfg),
+        "in_article": mgid_slot(
+            "article-in-article",
+            layout="infeed",
+            cfg=cfg,
+            widget_id=widget_for_slot("article-in-article", cfg),
+        ),
+        "bottom": mgid_slot(
+            "article-bottom",
+            layout="infeed",
+            cfg=cfg,
+            widget_id=widget_for_slot("article-bottom", cfg),
+        ),
     }
 
 
-def static_slots(cfg: dict | None = None) -> dict[str, str]:
-    return {
-        "top": mgid_slot("static-top", eager=True, layout="banner", cfg=cfg),
-        "mid": mgid_slot("static-mid", layout="infeed", cfg=cfg),
-    }
-
-
-def strip_old_mgid_markup(content: str) -> str:
+def strip_all_mgid_slots(content: str) -> str:
     content = re.sub(
         r"<script>\(function\(w,q\)\{w\[q\]=w\[q\]\|\|\[\];w\[q\]\.push\(\[\"_mgc\.load\"\]\)\}\)\(window,\"_mgq\"\);</script>",
         "",
         content,
     )
     content = re.sub(
-        r'<div class="mgid-(?:widget-wrap|ad-slot)[^"]*"[^>]*>.*?data-widget-id="[^"]*".*?</div>',
+        r'<div id="mgid-(?:home-top|article-top|static-top)-strip">.*?</div>\s*</div>?',
+        "",
+        content,
+        flags=re.DOTALL,
+    )
+    content = re.sub(
+        r'<div class="mgid-ad-slot[^>]*>.*?</div>\s*</div>',
         "",
         content,
         flags=re.DOTALL,
@@ -137,151 +153,75 @@ def strip_old_mgid_markup(content: str) -> str:
 
 
 def upsert_head_mgid(content: str, cfg: dict | None = None) -> str:
-    content = strip_old_mgid_markup(content)
     content = re.sub(
         r'<script src="https://jsc\.mgid\.com/site/\d+\.js" async></script>',
         "",
         content,
     )
-    if MGID_STYLES not in content:
-        bundle = mgid_head_bundle(cfg)
-        if "</head>" in content:
+    bundle = mgid_head_bundle(cfg)
+    if "</head>" in content:
+        if MGID_STYLES in content and "jsc.mgid.com" in content:
+            content = re.sub(
+                r'<script src="https://jsc\.mgid\.com/site/\d+\.js" async></script>',
+                mgid_head_snippet(cfg),
+                content,
+            )
+        elif "jsc.mgid.com" not in content:
             content = content.replace("</head>", f"{bundle}</head>", 1)
-        elif "<body" in content:
-            content = content.replace("<body", f"{bundle}<body", 1)
-    else:
-        snippet = mgid_head_snippet(cfg)
-        if "jsc.mgid.com" not in content and "</head>" in content:
-            content = content.replace("</head>", f"{snippet}</head>", 1)
     return content
 
 
 def ensure_body_loader(content: str) -> str:
-    content = re.sub(
-        r"<script>\(function\(w,q\)\{w\[q\]=w\[q\]\|\|\[\];w\[q\]\.push\(\[\"_mgc\.load\"\]\)\}\)\(window,\"_mgq\"\);</script>",
-        "",
-        content,
-    )
-    if "mgid-lazy.js" in content:
-        return content
-    if "</body>" in content:
-        return content.replace("</body>", f"{MGID_LOADER}</body>", 1)
-    return content + MGID_LOADER
+    if "mgid-lazy.js" not in content:
+        if "</body>" in content:
+            content = content.replace("</body>", f"{MGID_LOADER}</body>", 1)
+        else:
+            content += MGID_LOADER
+    return content
 
 
 def inject_home_layout(content: str, cfg: dict | None = None) -> str:
-    s = home_slots(cfg)
-    top_strip = (
-        f'<div id="mgid-home-top-strip">{s["top"]}</div>'
-    )
+    top = home_top_slot(cfg)
+    top_strip = f'<div id="mgid-home-top-strip">{top}</div>'
+    content = strip_all_mgid_slots(content)
+    content = upsert_head_mgid(content, cfg)
     if "mgid-home-top-strip" not in content:
         content = content.replace(
             '<div class="pt-32 sm:pt-36"></div>',
             f'<div class="pt-32 sm:pt-36"></div>{top_strip}',
             1,
         )
-    if 'data-mgid-slot="home-after-hero"' not in content:
+    else:
         content = re.sub(
-            r'(ezoic-pub-ad-placeholder-101"></div></div>(?:</div>)?\s*</section>\s*)'
-            r'(<section class="mt-10 rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200 sm:p-8" '
-            r'aria-labelledby="latest-briefs-heading">)',
-            rf'\1{s["after_hero"]}    </section>    \2',
+            r'<div id="mgid-home-top-strip">.*?</div>\s*(?=<main)',
+            f"{top_strip}",
             content,
             count=1,
+            flags=re.DOTALL,
         )
-    sidebar_marker = '<aside class="hidden xl:block w-[320px]"><div class="sticky top-24 space-y-6">'
-    if sidebar_marker in content and 'data-mgid-slot="home-sidebar"' not in content:
-        content = content.replace(
-            sidebar_marker,
-            f'{sidebar_marker}{s["sidebar"]}',
-            1,
-        )
-    if "</main>" in content and 'data-mgid-slot="home-pre-footer"' not in content:
-        content = content.replace("</main>", f'{s["pre_footer"]}</main>', 1)
     return content
 
 
 def inject_article_layout(content: str, cfg: dict | None = None) -> str:
     s = article_slots(cfg)
-    if '<div class="pt-24 sm:pt-28"></div>' in content and 'data-mgid-slot="article-top"' not in content:
-        content = content.replace(
-            '<div class="pt-24 sm:pt-28"></div>',
-            f'<div class="pt-24 sm:pt-28"></div><div id="mgid-article-top-strip">{s["top"]}</div>',
-            1,
-        )
-    lede_end = "<!-- ARTICLE_LEDE -->"
-    if lede_end in content:
-        pass
-    lede_close = "</p>\n        </header>"
-    if lede_close in content and 'data-mgid-slot="article-under-lede"' not in content:
-        content = content.replace(
-            lede_close,
-            f"</p>\n        </header>\n\n        {s['under_lede']}",
-            1,
-        )
-    minified_lede = "</p>        </header>"
-    if minified_lede in content and 'data-mgid-slot="article-under-lede"' not in content:
-        content = content.replace(
-            minified_lede,
-            f"</p>        </header>        {s['under_lede']}",
-            1,
-        )
+    content = strip_all_mgid_slots(content)
+    content = upsert_head_mgid(content, cfg)
+
     ezoic_101 = '<div class="ezoic-ad mx-auto my-8 max-w-3xl"><div id="ezoic-pub-ad-placeholder-101"></div></div>'
-    if ezoic_101 in content and 'data-mgid-slot="article-in-article"' not in content:
-        content = content.replace(
-            ezoic_101,
-            f"{ezoic_101}        {s['in_article']}",
-            1,
-        )
-    ezoic_106 = '<div class="ezoic-ad mx-auto my-8 max-w-3xl"><div id="ezoic-pub-ad-placeholder-106"></div></div>'
-    if ezoic_106 in content and 'data-mgid-slot="article-mid"' not in content:
-        content = content.replace(
-            ezoic_106,
-            f"{ezoic_106}        {s['mid']}",
-            1,
-        )
+    if ezoic_101 in content:
+        content = content.replace(f"{ezoic_101}", f"{ezoic_101}{s['in_article']}", 1)
+
     ezoic_107 = '<div class="ezoic-ad mx-auto my-8 max-w-3xl"><div id="ezoic-pub-ad-placeholder-107"></div></div>'
-    if ezoic_107 in content and 'data-mgid-slot="article-bottom"' not in content:
-        content = content.replace(
-            ezoic_107,
-            f"{ezoic_107}        {s['bottom']}",
-            1,
-        )
-    aside_marker = '<aside class="hidden xl:block w-[320px]"><div class="sticky top-24 space-y-6">'
-    if aside_marker in content and 'data-mgid-slot="article-sidebar"' not in content:
-        content = content.replace(aside_marker, f"{aside_marker}          {s['sidebar']}", 1)
-    min_aside = '<aside class="hidden xl:block w-[320px]"><div class="sticky top-24 space-y-6"><div class="ezoic-ad">'
-    if min_aside in content and 'data-mgid-slot="article-sidebar"' not in content:
-        content = content.replace(
-            min_aside,
-            f'<aside class="hidden xl:block w-[320px]"><div class="sticky top-24 space-y-6">{s["sidebar"]}<div class="ezoic-ad">',
-            1,
-        )
+    if ezoic_107 in content:
+        content = content.replace(f"{ezoic_107}", f"{ezoic_107}{s['bottom']}", 1)
+
     return content
 
 
 def inject_static_layout(content: str, cfg: dict | None = None) -> str:
-    s = static_slots(cfg)
-    if '<div class="pt-24 sm:pt-28"></div>' in content and 'data-mgid-slot="static-top"' not in content:
-        content = content.replace(
-            '<div class="pt-24 sm:pt-28"></div>',
-            f'<div class="pt-24 sm:pt-28"></div>\n  <div id="mgid-static-top-strip">{s["top"]}</div>',
-            1,
-        )
-    content = re.sub(
-        r'<div id="mgid-static-top-strip"></div></div>',
-        f'<div id="mgid-static-top-strip">{s["top"]}</div>',
-        content,
-    )
-    main_open = '<main class="mx-auto'
-    if main_open in content and 'data-mgid-slot="static-mid"' not in content:
-        idx = content.find(main_open)
-        article_open = content.find("<article", idx)
-        h1_end = content.find("</h1>", article_open if article_open >= 0 else idx)
-        if h1_end > 0:
-            insert_at = h1_end + len("</h1>")
-            content = content[:insert_at] + s["mid"] + content[insert_at:]
-    return content
+    """Static pages: MGID head + lazy script only (no extra widgets)."""
+    content = strip_all_mgid_slots(content)
+    return upsert_head_mgid(content, cfg)
 
 
 def classify_page(path: Path) -> PageKind | None:
@@ -295,15 +235,15 @@ def classify_page(path: Path) -> PageKind | None:
 
 
 def apply_mgid_to_html(content: str, kind: PageKind, cfg: dict | None = None) -> str:
-    content = upsert_head_mgid(content, cfg)
     if kind == "home":
         content = inject_home_layout(content, cfg)
     elif kind == "article":
         content = inject_article_layout(content, cfg)
     elif kind == "static":
         content = inject_static_layout(content, cfg)
-    content = ensure_body_loader(content)
-    return content
+    else:
+        content = upsert_head_mgid(content, cfg)
+    return ensure_body_loader(content)
 
 
 def apply_mgid_sitewide(*, include_all_briefs: bool = True, brief_limit: int = 0) -> int:
@@ -338,16 +278,15 @@ def apply_mgid_sitewide(*, include_all_briefs: bool = True, brief_limit: int = 0
 
 
 def article_template_markers_fill(template: str, cfg: dict | None = None) -> str:
-    """Fill MGID_* markers in article-template.html for new brief generation."""
     s = article_slots(cfg)
     replacements = {
         "MGID_HEAD": mgid_head_bundle(cfg),
-        "MGID_TOP": f'<div id="mgid-article-top-strip">{s["top"]}</div>',
-        "MGID_UNDER_LEDE": s["under_lede"],
+        "MGID_TOP": "",
+        "MGID_UNDER_LEDE": "",
         "MGID_IN_ARTICLE": s["in_article"],
-        "MGID_MID": s["mid"],
+        "MGID_MID": "",
         "MGID_BOTTOM": s["bottom"],
-        "MGID_SIDEBAR": s["sidebar"],
+        "MGID_SIDEBAR": "",
         "MGID_LOADER": MGID_LOADER,
     }
     for name, value in replacements.items():
