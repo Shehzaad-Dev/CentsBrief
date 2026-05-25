@@ -1,8 +1,5 @@
 /**
- * CentsBrief MGID loader
- * - Homepage top banner (.mgid-slot--eager): loads as soon as the page is ready
- * - Article units (.mgid-slot--lazy): load when the slot is near the viewport
- * - One _mgc.load per page (MGID requirement)
+ * Lazy MGID slots only — homepage top uses inline _mgc.load in page footer.
  */
 (function () {
   var loaded = false;
@@ -16,7 +13,7 @@
     })(window, "_mgq");
   }
 
-  function observeLazySlots() {
+  function init() {
     var lazy = document.querySelectorAll(".mgid-slot--lazy");
     if (!lazy.length) return;
 
@@ -35,22 +32,11 @@
           }
         }
       },
-      { rootMargin: "280px 0px", threshold: 0.01 }
+      { rootMargin: "320px 0px", threshold: 0.01 }
     );
 
     for (var j = 0; j < lazy.length; j++) {
       observer.observe(lazy[j]);
-    }
-  }
-
-  function init() {
-    var eager = document.querySelectorAll(".mgid-slot--eager");
-    if (eager.length) {
-      triggerMgidLoad();
-    }
-    observeLazySlots();
-    if (!eager.length && !document.querySelectorAll(".mgid-slot--lazy").length) {
-      return;
     }
   }
 

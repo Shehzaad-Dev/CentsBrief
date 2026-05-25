@@ -1,0 +1,50 @@
+/* CentsBrief layout — works even if Tailwind CDN is slow */
+.home-main-grid {
+  display: grid;
+  gap: 2.5rem;
+  width: 100%;
+}
+@media (min-width: 1280px) {
+  .home-main-grid {
+    grid-template-columns: minmax(0, 1fr) 320px;
+    align-items: start;
+  }
+}
+.home-primary-column {
+  display: flex;
+  flex-direction: column;
+  gap: 2.5rem;
+  min-width: 0;
+}
+#brief-feed-grid {
+  display: grid;
+  gap: 1.25rem;
+  grid-template-columns: minmax(0, 1fr);
+  width: 100%;
+}
+@media (min-width: 640px) {
+  #brief-feed-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (min-width: 1024px) {
+  #brief-feed-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+#brief-feed-grid article {
+  min-width: 0;
+  word-wrap: break-word;
+  overflow-wrap: anywhere;
+}
+#brief-feed-grid h3 {
+  overflow-wrap: anywhere;
+}
+.home-sidebar {
+  min-width: 0;
+}
+@media (max-width: 1279px) {
+  .home-sidebar {
+    width: 100%;
+  }
+}

@@ -36,6 +36,11 @@
   padding: 0.75rem 1rem;
   min-height: 120px;
 }
+#mgid-home-top-strip .mgid-ad-slot:empty::after {
+  content: "";
+  display: block;
+  min-height: 90px;
+}
 .mgid-slot--lazy {
   content-visibility: auto;
   contain-intrinsic-size: auto 280px;

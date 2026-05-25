@@ -33,8 +33,16 @@ SKIP_FILES = {
     "amp-mgid.html",
 }
 
-MGID_STYLES = '<link rel="stylesheet" href="/assets/mgid.css" />'
-MGID_LOADER = '<script src="/assets/mgid-lazy.js" defer></script>'
+MGID_STYLES = (
+    '<link rel="stylesheet" href="/assets/site-layout.css" />'
+    '<link rel="stylesheet" href="/assets/mgid.css" />'
+)
+MGID_LOADER = (
+    '<script data-cfasync="false" src="/assets/mgid-lazy.js" defer></script>'
+    '<script data-cfasync="false">'
+    "(function(w,q){w[q]=w[q]||[];w[q].push(['_mgc.load'])})(window,'_mgq');"
+    "</script>"
+)
 
 
 def load_mgid_config() -> dict:
@@ -74,7 +82,9 @@ def mgid_site_id(cfg: dict | None = None) -> str:
 
 def mgid_head_snippet(cfg: dict | None = None) -> str:
     sid = html.escape(mgid_site_id(cfg))
-    return f'<script src="https://jsc.mgid.com/site/{sid}.js" async></script>'
+    return (
+        f'<script data-cfasync="false" src="https://jsc.mgid.com/site/{sid}.js" async></script>'
+    )
 
 
 def mgid_head_bundle(cfg: dict | None = None) -> str:
@@ -180,7 +190,37 @@ def ensure_body_loader(content: str) -> str:
     return content
 
 
+def repair_index_layout(content: str) -> str:
+    """Fix extra closing tags that break the homepage 2-column grid."""
+    content = content.replace(
+        "</div></div>    </section>        </section>    <section class=",
+        "</div>    </section>    <section class=",
+    )
+    content = re.sub(
+        r"</div></div>\s*</section>\s*</section>\s*<section class=",
+        "</div>    </section>    <section class=",
+        content,
+        count=1,
+    )
+    if "home-main-grid" not in content:
+        content = content.replace(
+            'class="grid gap-10 xl:grid-cols-[1fr_320px]"',
+            'class="home-main-grid"',
+            1,
+        )
+    if "home-primary-column" not in content:
+        content = content.replace('<div class="space-y-10">', '<div class="home-primary-column">', 1)
+    if "brief-feed-grid" not in content:
+        content = content.replace(
+            '<div class="grid gap-5 md:grid-cols-2 lg:grid-cols-3">',
+            '<div id="brief-feed-grid" class="grid gap-5 md:grid-cols-2 lg:grid-cols-3">',
+            1,
+        )
+    return content
+
+
 def inject_home_layout(content: str, cfg: dict | None = None) -> str:
+    content = repair_index_layout(content)
     top = home_top_slot(cfg)
     top_strip = f'<div id="mgid-home-top-strip">{top}</div>'
     content = strip_all_mgid_slots(content)
