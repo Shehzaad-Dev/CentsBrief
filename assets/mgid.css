@@ -1,47 +1,28 @@
-/* MGID ad slots — reserve space to limit CLS; eager slots load immediately */
-.mgid-ad-slot {
+/* MGID — minimal wrapper so MGID controls layout (no gray “ad box”) */
+.mgid-widget-placement {
   width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
-  background: #f8fafc;
-  border-radius: 0.75rem;
+  max-width: 100%;
+  margin: 1.25rem 0;
+  clear: both;
+  background: transparent;
+  border: 0;
+  padding: 0;
+  min-height: 0;
+  overflow: visible;
 }
-.mgid-layout--banner {
-  min-height: 100px;
-  border-bottom: 1px solid #e2e8f0;
-  border-radius: 0;
-  background: #fff;
-}
-.mgid-layout--infeed {
-  min-height: 280px;
-  max-width: 48rem;
-  margin-left: auto;
-  margin-right: auto;
-}
-.mgid-layout--sidebar {
-  min-height: 320px;
-}
-#mgid-home-top-strip {
+.mgid-widget-placement [data-type="_mgwidget"] {
   width: 100%;
-  background: #fff;
-  border-bottom: 1px solid #e2e8f0;
-  position: relative;
-  z-index: 10;
-}
-#mgid-home-top-strip .mgid-ad-slot {
-  max-width: 80rem;
-  margin: 0 auto;
-  padding: 0.75rem 1rem;
-  min-height: 120px;
-}
-#mgid-home-top-strip .mgid-ad-slot:empty::after {
-  content: "";
+  max-width: 100%;
   display: block;
-  min-height: 90px;
+  min-height: 0;
 }
-.mgid-slot--lazy {
-  content-visibility: auto;
-  contain-intrinsic-size: auto 280px;
+/* Homepage: full-width in hero — high visibility for Smart Widget */
+.mgid-widget-placement--hero {
+  margin: 1rem 0 1.25rem;
+  max-width: 48rem;
+}
+/* Article: wide in-feed block */
+.mgid-widget-placement--article {
+  margin: 1.5rem auto;
+  max-width: 48rem;
 }

@@ -1,4 +1,4 @@
-"""MGID: homepage top banner (eager) + lazy units on article pages only."""
+"""MGID official Simple JS: one head loader, widget div + _mgc.load per placement."""
 from __future__ import annotations
 
 import html
@@ -37,10 +37,10 @@ MGID_STYLES = (
     '<link rel="stylesheet" href="/assets/site-layout.css" />'
     '<link rel="stylesheet" href="/assets/mgid.css" />'
 )
-MGID_LOADER = (
-    '<script data-cfasync="false" src="/assets/mgid-lazy.js" defer></script>'
+
+MGID_LOAD_SCRIPT = (
     '<script data-cfasync="false">'
-    "(function(w,q){w[q]=w[q]||[];w[q].push(['_mgc.load'])})(window,'_mgq');"
+    '(function(w,q){w[q]=w[q]||[];w[q].push(["_mgc.load"])})(window,"_mgq");'
     "</script>"
 )
 
@@ -50,7 +50,6 @@ def load_mgid_config() -> dict:
         "site_id": "1097226",
         "home_top_widget_id": "2017365",
         "article_infeed_widget_id": "2017365",
-        "article_bottom_widget_id": "2017365",
         "enable_amp": False,
     }
     if not MGID_CONFIG_PATH.exists():
@@ -65,9 +64,8 @@ def load_mgid_config() -> dict:
 def widget_for_slot(slot_id: str, cfg: dict | None = None) -> str:
     cfg = cfg or load_mgid_config()
     keys = {
-        "home-top": "home_top_widget_id",
-        "article-in-article": "article_infeed_widget_id",
-        "article-bottom": "article_bottom_widget_id",
+        "home-hero": "home_top_widget_id",
+        "article-infeed": "article_infeed_widget_id",
     }
     key = keys.get(slot_id)
     if key and cfg.get(key):
@@ -91,107 +89,112 @@ def mgid_head_bundle(cfg: dict | None = None) -> str:
     return MGID_STYLES + mgid_head_snippet(cfg)
 
 
-def mgid_slot(
-    slot_id: str,
+def mgid_widget_official(
+    widget_id: str,
     *,
-    eager: bool = False,
-    layout: str = "infeed",
-    cfg: dict | None = None,
-    widget_id: str | None = None,
+    placement_class: str = "",
+    slot_id: str = "",
 ) -> str:
-    wid = html.escape(widget_id or widget_for_slot(slot_id, cfg))
-    mode = "mgid-slot--eager" if eager else "mgid-slot--lazy"
+    """Exact MGID dashboard body code: widget div + load script immediately after."""
+    wid = html.escape(widget_id)
+    cls = f"mgid-widget-placement {placement_class}".strip()
+    slot_attr = f' data-mgid-slot="{html.escape(slot_id)}"' if slot_id else ""
     return (
-        f'<div class="mgid-ad-slot {mode} mgid-layout--{layout}" '
-        f'data-mgid-slot="{html.escape(slot_id)}" aria-label="Advertisement">'
-        f'<div data-type="_mgwidget" data-widget-id="{wid}"></div></div>'
+        f'<div class="{cls}"{slot_attr}>'
+        f'<div data-type="_mgwidget" data-widget-id="{wid}"></div>'
+        f"{MGID_LOAD_SCRIPT}"
+        "</div>"
     )
 
 
-def home_top_slot(cfg: dict | None = None) -> str:
-    return mgid_slot(
-        "home-top",
-        eager=True,
-        layout="banner",
-        cfg=cfg,
-        widget_id=widget_for_slot("home-top", cfg),
+def strip_all_mgid_markup(content: str) -> str:
+    """Remove only MGID blocks — never use greedy matchers across the whole page."""
+    content = re.sub(
+        r'<script data-cfasync="false">\s*'
+        r"\(function\(w,q\)\{w\[q\]=w\[q\]\|\|\[\];w\[q\]\.push\(\[\"_mgc\.load\"\]\)\}\)"
+        r'\(window,"_mgq"\);\s*</script>',
+        "",
+        content,
     )
-
-
-def article_slots(cfg: dict | None = None) -> dict[str, str]:
-    return {
-        "in_article": mgid_slot(
-            "article-in-article",
-            layout="infeed",
-            cfg=cfg,
-            widget_id=widget_for_slot("article-in-article", cfg),
-        ),
-        "bottom": mgid_slot(
-            "article-bottom",
-            layout="infeed",
-            cfg=cfg,
-            widget_id=widget_for_slot("article-bottom", cfg),
-        ),
-    }
-
-
-def strip_all_mgid_slots(content: str) -> str:
     content = re.sub(
         r"<script>\(function\(w,q\)\{w\[q\]=w\[q\]\|\|\[\];w\[q\]\.push\(\[\"_mgc\.load\"\]\)\}\)\(window,\"_mgq\"\);</script>",
         "",
         content,
     )
     content = re.sub(
-        r'<div id="mgid-(?:home-top|article-top|static-top)-strip">.*?</div>\s*</div>?',
+        r'<script data-cfasync="false" src="/assets/mgid-lazy\.js"[^>]*></script>',
         "",
         content,
-        flags=re.DOTALL,
     )
     content = re.sub(
-        r'<div class="mgid-ad-slot[^>]*>.*?</div>\s*</div>',
+        r'<div id="mgid-home-top-strip">[\s\S]*?</div>(?=\s*<main)',
         "",
         content,
-        flags=re.DOTALL,
+        count=1,
     )
     content = re.sub(
-        r"<!--\s*MGID_[A-Z_]+\s*-->.*?<!--\s*/MGID_[A-Z_]+\s*-->",
+        r'<div id="mgid-article-top-strip">[\s\S]*?</div>',
         "",
         content,
-        flags=re.DOTALL,
+        count=1,
+    )
+    content = re.sub(
+        r'<div class="mgid-widget-placement[^"]*"[^>]*>\s*'
+        r'<div data-type="_mgwidget" data-widget-id="[^"]*"></div>\s*'
+        r'(?:<script data-cfasync="false">[\s\S]*?</script>\s*)?'
+        r"</div>",
+        "",
+        content,
+    )
+    content = re.sub(
+        r'<div class="mgid-ad-slot[^>]*>\s*'
+        r'<div data-type="_mgwidget" data-widget-id="[^"]*"></div>\s*'
+        r"</div>",
+        "",
+        content,
+    )
+    content = re.sub(
+        r"<!--\s*MGID_[A-Z_]+\s*-->[\s\S]*?<!--\s*/MGID_[A-Z_]+\s*-->",
+        "",
+        content,
     )
     return content
 
 
 def upsert_head_mgid(content: str, cfg: dict | None = None) -> str:
     content = re.sub(
-        r'<script src="https://jsc\.mgid\.com/site/\d+\.js" async></script>',
+        r'<script[^>]*src="https://jsc\.mgid\.com/site/\d+\.js"[^>]*></script>',
         "",
         content,
     )
-    bundle = mgid_head_bundle(cfg)
-    if "</head>" in content:
-        if MGID_STYLES in content and "jsc.mgid.com" in content:
-            content = re.sub(
-                r'<script src="https://jsc\.mgid\.com/site/\d+\.js" async></script>',
-                mgid_head_snippet(cfg),
-                content,
-            )
-        elif "jsc.mgid.com" not in content:
+    snippet = mgid_head_snippet(cfg)
+    if "site-layout.css" not in content:
+        bundle = mgid_head_bundle(cfg)
+        if "</head>" in content:
             content = content.replace("</head>", f"{bundle}</head>", 1)
-    return content
-
-
-def ensure_body_loader(content: str) -> str:
-    if "mgid-lazy.js" not in content:
-        if "</body>" in content:
-            content = content.replace("</body>", f"{MGID_LOADER}</body>", 1)
-        else:
-            content += MGID_LOADER
+    elif "jsc.mgid.com" not in content and "</head>" in content:
+        content = content.replace("</head>", f"{snippet}</head>", 1)
+    elif "jsc.mgid.com" in content:
+        content = re.sub(
+            r'<script[^>]*src="https://jsc\.mgid\.com/site/\d+\.js"[^>]*></script>',
+            snippet,
+            content,
+            count=1,
+        )
+        # Remove duplicate site scripts if any remain
+        first = content.find(snippet)
+        if first >= 0:
+            rest = content[first + len(snippet) :]
+            if "jsc.mgid.com" in rest:
+                content = content[: first + len(snippet)] + re.sub(
+                    r'<script[^>]*src="https://jsc\.mgid\.com/site/\d+\.js"[^>]*></script>',
+                    "",
+                    rest,
+                )
     return content
 
 
 def repair_index_layout(content: str) -> str:
-    """Fix extra closing tags that break the homepage 2-column grid."""
     content = content.replace(
         "</div></div>    </section>        </section>    <section class=",
         "</div>    </section>    <section class=",
@@ -220,47 +223,91 @@ def repair_index_layout(content: str) -> str:
 
 
 def inject_home_layout(content: str, cfg: dict | None = None) -> str:
+    """Smart widget inside Market Pulse hero (high visibility), not hidden top strip."""
+    cfg = cfg or load_mgid_config()
     content = repair_index_layout(content)
-    top = home_top_slot(cfg)
-    top_strip = f'<div id="mgid-home-top-strip">{top}</div>'
-    content = strip_all_mgid_slots(content)
+    content = strip_all_mgid_markup(content)
     content = upsert_head_mgid(content, cfg)
-    if "mgid-home-top-strip" not in content:
-        content = content.replace(
-            '<div class="pt-32 sm:pt-36"></div>',
-            f'<div class="pt-32 sm:pt-36"></div>{top_strip}',
-            1,
-        )
-    else:
+
+    wid = widget_for_slot("home-hero", cfg)
+    block = mgid_widget_official(
+        wid,
+        placement_class="mgid-widget-placement--hero",
+        slot_id="home-hero",
+    )
+
+    if 'data-mgid-slot="home-hero"' in content:
         content = re.sub(
-            r'<div id="mgid-home-top-strip">.*?</div>\s*(?=<main)',
-            f"{top_strip}",
+            r'<div class="mgid-widget-placement[^"]*" data-mgid-slot="home-hero"[^>]*>.*?</div>',
+            block,
             content,
             count=1,
             flags=re.DOTALL,
         )
+        return content
+
+    # After hero summary, before “View Full Brief” (in viewport on load)
+    patterns = [
+        (
+            r"(<!--\s*/HERO_SUMMARY\s*-->)\s*</p>\s*<a href=\"briefs/",
+            rf"\1</p>{block}<a href=\"briefs/",
+        ),
+        (
+            r"(<!--\s*/HERO_SUMMARY\s*-->)\s*</p>\s*<a href=",
+            rf"\1</p>{block}<a href=",
+        ),
+    ]
+    for pattern, repl in patterns:
+        new_content, n = re.subn(pattern, repl, content, count=1)
+        if n:
+            return new_content
+
+    # Fallback: after today-brief h1 block opening summary paragraph end
+    fallback = '</p>      <a href="briefs/'
+    if fallback in content:
+        content = content.replace(fallback, f"</p>{block}      <a href=\"briefs/", 1)
     return content
 
 
 def inject_article_layout(content: str, cfg: dict | None = None) -> str:
-    s = article_slots(cfg)
-    content = strip_all_mgid_slots(content)
+    """One in-feed MGID block after lede (full width, official markup)."""
+    cfg = cfg or load_mgid_config()
+    content = strip_all_mgid_markup(content)
     content = upsert_head_mgid(content, cfg)
 
-    ezoic_101 = '<div class="ezoic-ad mx-auto my-8 max-w-3xl"><div id="ezoic-pub-ad-placeholder-101"></div></div>'
-    if ezoic_101 in content:
-        content = content.replace(f"{ezoic_101}", f"{ezoic_101}{s['in_article']}", 1)
+    wid = widget_for_slot("article-infeed", cfg)
+    block = mgid_widget_official(
+        wid,
+        placement_class="mgid-widget-placement--article",
+        slot_id="article-infeed",
+    )
 
-    ezoic_107 = '<div class="ezoic-ad mx-auto my-8 max-w-3xl"><div id="ezoic-pub-ad-placeholder-107"></div></div>'
-    if ezoic_107 in content:
-        content = content.replace(f"{ezoic_107}", f"{ezoic_107}{s['bottom']}", 1)
+    if 'data-mgid-slot="article-infeed"' in content:
+        content = re.sub(
+            r'<div class="mgid-widget-placement[^"]*" data-mgid-slot="article-infeed"[^>]*>.*?</div>',
+            block,
+            content,
+            count=1,
+            flags=re.DOTALL,
+        )
+        return content
 
+    markers = [
+        "</p>        </header>",
+        "</p>\n        </header>",
+    ]
+    for m in markers:
+        if m in content:
+            return content.replace(m, f"</p>        {block}</header>", 1)
+
+    lede = '<div class="ezoic-ad mx-auto my-8 max-w-3xl"><div id="ezoic-pub-ad-placeholder-101"></div></div>'
+    if lede in content:
+        return content.replace(lede, f"{block}{lede}", 1)
     return content
 
 
 def inject_static_layout(content: str, cfg: dict | None = None) -> str:
-    """Static pages: MGID head + lazy script only (no extra widgets)."""
-    content = strip_all_mgid_slots(content)
+    content = strip_all_mgid_markup(content)
     return upsert_head_mgid(content, cfg)
 
 
@@ -283,7 +330,7 @@ def apply_mgid_to_html(content: str, kind: PageKind, cfg: dict | None = None) ->
         content = inject_static_layout(content, cfg)
     else:
         content = upsert_head_mgid(content, cfg)
-    return ensure_body_loader(content)
+    return content
 
 
 def apply_mgid_sitewide(*, include_all_briefs: bool = True, brief_limit: int = 0) -> int:
@@ -318,16 +365,22 @@ def apply_mgid_sitewide(*, include_all_briefs: bool = True, brief_limit: int = 0
 
 
 def article_template_markers_fill(template: str, cfg: dict | None = None) -> str:
-    s = article_slots(cfg)
+    cfg = cfg or load_mgid_config()
+    wid = widget_for_slot("article-infeed", cfg)
+    infeed = mgid_widget_official(
+        wid,
+        placement_class="mgid-widget-placement--article",
+        slot_id="article-infeed",
+    )
     replacements = {
         "MGID_HEAD": mgid_head_bundle(cfg),
         "MGID_TOP": "",
-        "MGID_UNDER_LEDE": "",
-        "MGID_IN_ARTICLE": s["in_article"],
+        "MGID_UNDER_LEDE": infeed,
+        "MGID_IN_ARTICLE": "",
         "MGID_MID": "",
-        "MGID_BOTTOM": s["bottom"],
+        "MGID_BOTTOM": "",
         "MGID_SIDEBAR": "",
-        "MGID_LOADER": MGID_LOADER,
+        "MGID_LOADER": "",
     }
     for name, value in replacements.items():
         pattern = re.compile(
@@ -335,6 +388,4 @@ def article_template_markers_fill(template: str, cfg: dict | None = None) -> str
             re.DOTALL,
         )
         template = pattern.sub(lambda m, v=value: v, template)
-    if "mgid-lazy.js" not in template:
-        template = template.replace("</body>", f"{MGID_LOADER}</body>", 1)
     return template
