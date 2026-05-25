@@ -2,21 +2,42 @@ name: Daily Finance Brief Update
 
 on:
   schedule:
+    # 05:00 UTC daily
     - cron: "0 5 * * *"
   workflow_dispatch:
 
 permissions:
   contents: write
 
+concurrency:
+  group: daily-brief-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   build-and-publish:
     runs-on: ubuntu-latest
+    timeout-minutes: 45
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
+      - name: Resolve Groq API key
+        env:
+          GROQ_API_KEY_SECRET: ${{ secrets.GROQ_API_KEY }}
+          GROQ_API_KEY_LEGACY: ${{ secrets.GroqAPI }}
+        run: |
+          if [ -n "$GROQ_API_KEY_SECRET" ]; then
+            echo "GROQ_API_KEY=$GROQ_API_KEY_SECRET" >> "$GITHUB_ENV"
+          elif [ -n "$GROQ_API_KEY_LEGACY" ]; then
+            echo "GROQ_API_KEY=$GROQ_API_KEY_LEGACY" >> "$GITHUB_ENV"
+            echo "Using legacy secret name GroqAPI. Please add GROQ_API_KEY in repo secrets."
+          else
+            echo "::error::Missing Groq API key. Add repository secret GROQ_API_KEY (Settings → Secrets and variables → Actions)."
+            exit 1
+          fi
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -28,12 +49,21 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
+      - name: Verify RSS feed
+        run: |
+          python - <<'PY'
+          from main import fetch_top_finance_news, resolve_feed_url
+          titles = fetch_top_finance_news(resolve_feed_url(), limit=3)
+          print("RSS OK:", titles)
+          PY
+
       - name: Generate daily brief
         env:
-          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
           GROQ_MODEL: llama-3.3-70b-versatile
-          RSS_FEED_URL: ${{ secrets.RSS_FEED_URL }}
+          GROQ_FALLBACK_MODEL: llama-3.1-8b-instant
           SITE_BASE_URL: https://centsbreif.online
+          BRIEF_RETENTION_DAYS: "60"
+          MIN_BRIEF_WORDS: "800"
         run: python main.py
 
       - name: Commit and push if changed
@@ -41,10 +71,9 @@ jobs:
           if [[ -n "$(git status --porcelain)" ]]; then
             git config user.name "github-actions[bot]"
             git config user.email "github-actions[bot]@users.noreply.github.com"
-            git add --all index.html briefs/*.html sitemap.xml robots.txt
-            # Force remove any legacy briefs from root to ensure they never reappear in the index
-            git ls-files | grep "^brief-" | xargs -r git rm -f
-            git ls-files --deleted | grep -E "brief-|briefs/" | xargs -r git rm
+            git add index.html briefs sitemap.xml robots.txt
+            git ls-files --deleted | grep -E '^briefs/' | xargs -r git rm -f
+            git ls-files | grep '^brief-' | xargs -r git rm -f
             git commit -m "chore: publish daily automated finance brief and clean up archive"
             git push
           else

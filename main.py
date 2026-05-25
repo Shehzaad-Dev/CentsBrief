@@ -1,8 +1,10 @@
+import argparse
 import datetime as dt
 import html
 import json
 import os
 import re
+import sys
 from pathlib import Path
 from typing import List, Tuple
 
@@ -14,10 +16,12 @@ BASE_DIR = Path(__file__).resolve().parent
 INDEX_PATH = BASE_DIR / "index.html"
 ARTICLE_TEMPLATE_PATH = BASE_DIR / "article-template.html"
 TARGET_WORD_COUNT = 1000
+MIN_BRIEF_WORDS = int(os.getenv("MIN_BRIEF_WORDS", "800"))
 RETENTION_DAYS = int(os.getenv("BRIEF_RETENTION_DAYS", "60"))
 DEFAULT_FEED_URL = "https://feeds.finance.yahoo.com/rss/2.0/headline?s=%5EGSPC,%5EFTSE&region=US&lang=en-US"
 SITE_BASE_URL = os.getenv("SITE_BASE_URL", "https://centsbreif.online").rstrip("/")
 GROQ_MODEL = os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile")
+GROQ_FALLBACK_MODEL = os.getenv("GROQ_FALLBACK_MODEL", "llama-3.1-8b-instant")
 BRIEFS_DIR = BASE_DIR / "briefs"
 
 
@@ -49,6 +53,16 @@ def replace_marker(content: str, marker_name: str, value: str, keep_markers: boo
         return pattern.sub(lambda m: value, content)
 
 
+def resolve_feed_url() -> str:
+    """Use default Yahoo feed when RSS_FEED_URL is unset or blank."""
+    configured = (os.getenv("RSS_FEED_URL") or "").strip()
+    return configured or DEFAULT_FEED_URL
+
+
+def count_words(text: str) -> int:
+    return len(re.findall(r"\b\w+\b", text))
+
+
 def fetch_top_finance_news(feed_url: str, limit: int = 3) -> List[str]:
     parsed = feedparser.parse(feed_url)
     if parsed.bozo:
@@ -59,10 +73,55 @@ def fetch_top_finance_news(feed_url: str, limit: int = 3) -> List[str]:
     return [entry.get("title", "").strip() for entry in entries if entry.get("title")]
 
 
-def ask_groq_for_brief(titles: List[str]) -> Tuple[str, str, str]:
+def groq_chat_completion(
+    api_key: str,
+    model: str,
+    messages: List[dict],
+    *,
+    max_attempts: int = 4,
+) -> str:
+    last_error = "Unknown Groq API error."
+    for attempt in range(1, max_attempts + 1):
+        response = requests.post(
+            "https://api.groq.com/openai/v1/chat/completions",
+            headers={
+                "Authorization": f"Bearer {api_key}",
+                "Content-Type": "application/json",
+            },
+            json={
+                "model": model,
+                "messages": messages,
+                "temperature": 0.4,
+            },
+            timeout=120,
+        )
+        if response.status_code in {429, 500, 502, 503, 504}:
+            last_error = f"Groq API error {response.status_code}: {response.text[:400]}"
+            if attempt < max_attempts:
+                continue
+            raise RuntimeError(last_error)
+        if response.status_code >= 400:
+            raise RuntimeError(f"Groq API error {response.status_code}: {response.text[:400]}")
+
+        payload = response.json()
+        text = (
+            payload.get("choices", [{}])[0]
+            .get("message", {})
+            .get("content", "")
+            .strip()
+        )
+        if text:
+            return text
+        last_error = "Groq API returned an empty completion."
+    raise RuntimeError(last_error)
+
+
+def ask_groq_for_brief(titles: List[str], model: str = GROQ_MODEL) -> Tuple[str, str, str]:
     api_key = os.getenv("GROQ_API_KEY")
     if not api_key:
-        raise RuntimeError("Missing GROQ_API_KEY environment variable.")
+        raise RuntimeError(
+            "Missing GROQ_API_KEY. Add it in GitHub: Settings → Secrets and variables → Actions → GROQ_API_KEY"
+        )
 
     titles_block = "\n".join([f"- {t}" for t in titles])
     prompt = f"""
@@ -102,32 +161,11 @@ BRIEF:
         {"role": "user", "content": prompt},
     ]
 
-    for attempt in range(1, 4):
-        response = requests.post(
-            "https://api.groq.com/openai/v1/chat/completions",
-            headers={
-                "Authorization": f"Bearer {api_key}",
-                "Content-Type": "application/json",
-            },
-            json={
-                "model": GROQ_MODEL,
-                "messages": base_messages,
-                "temperature": 0.4,
-            },
-            timeout=120,
-        )
-        if response.status_code >= 400:
-            raise RuntimeError(f"Groq API error {response.status_code}: {response.text[:400]}")
+    best_candidate: Tuple[str, str, str] | None = None
+    best_word_count = 0
 
-        payload = response.json()
-        text = (
-            payload.get("choices", [{}])[0]
-            .get("message", {})
-            .get("content", "")
-            .strip()
-        )
-        if not text:
-            continue
+    for attempt in range(1, 4):
+        text = groq_chat_completion(api_key, model, base_messages)
 
         headline_match = re.search(r"HEADLINE:\s*(.+)", text)
         summary_match = re.search(r"SUMMARY:\s*(.+)", text)
@@ -138,7 +176,11 @@ BRIEF:
         headline = clean_text(headline_match.group(1).strip())
         summary = clean_text(summary_match.group(1).strip())
         brief = brief_match.group(1).strip()
-        if len(re.findall(r"\b\w+\b", brief)) >= 950:
+        word_count = count_words(brief)
+        if word_count > best_word_count:
+            best_candidate = (headline, summary, brief)
+            best_word_count = word_count
+        if word_count >= MIN_BRIEF_WORDS:
             return headline, summary, brief
 
         base_messages = [
@@ -148,14 +190,20 @@ BRIEF:
             {
                 "role": "user",
                 "content": (
-                    "The previous brief is too short. Expand each section with more concrete market details, "
-                    "household implications, and examples so BRIEF reaches at least 1000 words while keeping "
-                    "the exact same HEADLINE/SUMMARY/BRIEF output format."
+                    f"The previous brief is too short ({word_count} words). Expand each section with more "
+                    f"concrete market details, household implications, and examples so BRIEF reaches at least "
+                    f"{TARGET_WORD_COUNT} words while keeping the exact same HEADLINE/SUMMARY/BRIEF output format."
                 ),
             },
         ]
 
-    raise RuntimeError("Generated brief is below minimum required length (1000-word target).")
+    if best_candidate and best_word_count >= max(500, MIN_BRIEF_WORDS - 200):
+        print(f"Warning: using best available brief ({best_word_count} words, target {TARGET_WORD_COUNT}).")
+        return best_candidate
+
+    raise RuntimeError(
+        f"Generated brief is below minimum required length ({MIN_BRIEF_WORDS} words, best was {best_word_count})."
+    )
 
 
 def brief_text_to_html(brief_text: str) -> str:
@@ -555,6 +603,37 @@ def cleanup_old_briefs(today: dt.datetime, retention_days: int) -> list[str]:
     return deleted
 
 
+def sync_homepage_from_latest_brief() -> str:
+    """Promote the newest brief file to the homepage hero and feed ordering."""
+    brief_files = sorted(BRIEFS_DIR.glob("brief-*.html"), reverse=True)
+    if not brief_files:
+        raise RuntimeError("No brief files found in briefs/ to sync.")
+
+    latest_path = brief_files[0]
+    date_match = re.search(r"brief-(\d{4}-\d{2}-\d{2})", latest_path.name)
+    if not date_match:
+        raise RuntimeError(f"Could not parse date from brief filename: {latest_path.name}")
+
+    publish_date = dt.datetime.strptime(date_match.group(1), "%Y-%m-%d")
+    headline, lede = extract_article_info(latest_path)
+    summary = lede
+
+    index_content = INDEX_PATH.read_text(encoding="utf-8")
+    updated_index = update_homepage(
+        index_html=index_content,
+        headline=headline,
+        summary=summary,
+        lede=lede,
+        output_filename=latest_path.name,
+        publish_date=publish_date,
+    )
+    INDEX_PATH.write_text(minify_html(updated_index), encoding="utf-8")
+    generate_sitemap(dt.datetime.now(dt.UTC).replace(tzinfo=None))
+    generate_robots_txt()
+    print(f"Synced homepage hero to: {latest_path.name}")
+    return latest_path.name
+
+
 def generate_sitemap(today: dt.datetime) -> None:
     exclude_files = {
         "404.html", "article-template.html",
@@ -583,17 +662,40 @@ def generate_sitemap(today: dt.datetime) -> None:
 
 
 def main() -> None:
-    feed_url = os.getenv("RSS_FEED_URL") or DEFAULT_FEED_URL
-    today = dt.datetime.now(dt.UTC).replace(tzinfo=None)
-    
+    parser = argparse.ArgumentParser(description="Generate or sync CentsBrief daily content.")
+    parser.add_argument(
+        "--sync-homepage-only",
+        action="store_true",
+        help="Update index.html hero and feed from the newest briefs/*.html file (no AI call).",
+    )
+    args = parser.parse_args()
+
     if not BRIEFS_DIR.exists():
         BRIEFS_DIR.mkdir(parents=True, exist_ok=True)
 
-    if not ARTICLE_TEMPLATE_PATH.exists() or not INDEX_PATH.exists():
-        raise FileNotFoundError("Missing required files: article-template.html and/or index.html")
+    if not INDEX_PATH.exists():
+        raise FileNotFoundError("Missing required file: index.html")
+
+    if args.sync_homepage_only:
+        sync_homepage_from_latest_brief()
+        return
+
+    feed_url = resolve_feed_url()
+    today = dt.datetime.now(dt.UTC).replace(tzinfo=None)
+
+    if not ARTICLE_TEMPLATE_PATH.exists():
+        raise FileNotFoundError("Missing required file: article-template.html")
 
     titles = fetch_top_finance_news(feed_url=feed_url, limit=3)
-    headline, summary, brief_text = ask_groq_for_brief(titles)
+    print(f"Fetched {len(titles)} headlines from RSS.")
+
+    try:
+        headline, summary, brief_text = ask_groq_for_brief(titles, model=GROQ_MODEL)
+    except RuntimeError as primary_error:
+        if GROQ_FALLBACK_MODEL == GROQ_MODEL:
+            raise
+        print(f"Primary model failed ({primary_error}); retrying with {GROQ_FALLBACK_MODEL}.")
+        headline, summary, brief_text = ask_groq_for_brief(titles, model=GROQ_FALLBACK_MODEL)
     
     slug = re.sub(r"[^a-z0-9]+", "-", headline.lower()).strip("-")
     output_filename = f"brief-{today.strftime('%Y-%m-%d')}-{slug}.html"
@@ -637,4 +739,8 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except Exception as exc:
+        print(f"ERROR: {exc}", file=sys.stderr)
+        raise
