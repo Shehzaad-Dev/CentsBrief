@@ -1,6 +1,7 @@
 {
-  "site_id": "978410",
-  "home_widget_id": "",
-  "in_article_widget_id": "",
-  "_comment": "Paste widget IDs from MGID dashboard → Widgets → your unit → Body code (data-widget-id). Leave empty to load site script only."
+  "site_id": "1097226",
+  "widget_id": "2017365",
+  "amp_website": "1097226",
+  "amp_widget": "2017365",
+  "_comment": "AMP embed is documented in amp-mgid.html for a later phase."
 }

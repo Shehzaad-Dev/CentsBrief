@@ -1,0 +1,35 @@
+/* MGID ad slots — reserve space to limit CLS; eager slots load immediately */
+.mgid-ad-slot {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background: #f8fafc;
+  border-radius: 0.75rem;
+}
+.mgid-layout--banner {
+  min-height: 100px;
+  border-bottom: 1px solid #e2e8f0;
+  border-radius: 0;
+  background: #fff;
+}
+.mgid-layout--infeed {
+  min-height: 280px;
+  max-width: 48rem;
+  margin-left: auto;
+  margin-right: auto;
+}
+.mgid-layout--sidebar {
+  min-height: 320px;
+}
+#mgid-home-top-strip {
+  width: 100%;
+  background: #fff;
+  border-bottom: 1px solid #e2e8f0;
+}
+#mgid-home-top-strip .mgid-ad-slot {
+  max-width: 80rem;
+  margin: 0 auto;
+  padding: 0.5rem 1rem;
+}

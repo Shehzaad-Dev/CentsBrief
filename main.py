@@ -23,7 +23,6 @@ SITE_BASE_URL = os.getenv("SITE_BASE_URL", "https://centsbreif.online").rstrip("
 GROQ_MODEL = os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile")
 GROQ_FALLBACK_MODEL = os.getenv("GROQ_FALLBACK_MODEL", "llama-3.1-8b-instant")
 BRIEFS_DIR = BASE_DIR / "briefs"
-MGID_CONFIG_PATH = BASE_DIR / "mgid.config.json"
 SITEMAP_EXCLUDE = {
     "404.html",
     "article-template.html",
@@ -38,51 +37,12 @@ SITEMAP_EXCLUDE = {
 }
 
 
-def load_mgid_config() -> dict:
-    defaults = {"site_id": "978410", "home_widget_id": "", "in_article_widget_id": ""}
-    if not MGID_CONFIG_PATH.exists():
-        return defaults
-    try:
-        data = json.loads(MGID_CONFIG_PATH.read_text(encoding="utf-8"))
-    except json.JSONDecodeError:
-        return defaults
-    return {**defaults, **{k: v for k, v in data.items() if not str(k).startswith("_")}}
-
-
-def mgid_head_snippet() -> str:
-    site_id = str(load_mgid_config().get("site_id") or "978410").strip()
-    return f'<script src="https://jsc.mgid.com/site/{html.escape(site_id)}.js" async></script>'
-
-
-def mgid_widget_snippet(widget_id: str) -> str:
-    wid = str(widget_id or "").strip()
-    if not wid:
-        return ""
-    return (
-        f'<div class="mgid-widget-wrap my-8 mx-auto max-w-3xl" data-type="_mgwidget" '
-        f'data-widget-id="{html.escape(wid)}"></div>'
-        '<script>(function(w,q){w[q]=w[q]||[];w[q].push(["_mgc.load"])})(window,"_mgq");</script>'
-    )
-
-
-def ensure_mgid_head_in_html(content: str) -> str:
-    if "jsc.mgid.com" in content:
-        return content
-    snippet = mgid_head_snippet()
-    if "</head>" in content:
-        return content.replace("</head>", f"{snippet}</head>", 1)
-    return content
-
-
-def ensure_index_mgid_widgets(index_html: str) -> str:
-    cfg = load_mgid_config()
-    updated = ensure_mgid_head_in_html(index_html)
-    home_widget = mgid_widget_snippet(str(cfg.get("home_widget_id") or ""))
-    if home_widget and "data-widget-id" not in updated:
-        marker = '<section class="mt-10 rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200 sm:p-8" aria-labelledby="latest-briefs-heading">'
-        if marker in updated:
-            updated = updated.replace(marker, home_widget + marker, 1)
-    return updated
+from mgid_integrate import (
+    apply_mgid_sitewide,
+    apply_mgid_to_html,
+    article_template_markers_fill,
+    load_mgid_config,
+)
 
 
 def clean_text(text: str) -> str:
@@ -571,13 +531,7 @@ def update_article_from_template(
     article_html = replace_marker(article_html, "READ_TIME", read_time)
     article_html = replace_marker(article_html, "ARTICLE_TOC", toc_html)
     article_html = replace_marker(article_html, "RELATED_INSIGHTS", "")
-    mgid_cfg = load_mgid_config()
-    article_html = replace_marker(article_html, "MGID_HEAD", mgid_head_snippet())
-    article_html = replace_marker(
-        article_html,
-        "MGID_IN_ARTICLE",
-        mgid_widget_snippet(str(mgid_cfg.get("in_article_widget_id") or "")),
-    )
+    article_html = article_template_markers_fill(article_html)
 
     # Inject article content while preserving markers
     article_html = replace_marker(article_html, "BRIEF_BODY", brief_html, keep_markers=True)
@@ -687,41 +641,6 @@ def list_missing_brief_dates(end_date: dt.datetime, max_days: int) -> List[dt.da
     return missing
 
 
-def patch_recent_briefs_mgid(limit: int = 10) -> int:
-    """Add MGID head/widget markup to recent brief files that predate template updates."""
-    brief_files = sorted(BRIEFS_DIR.glob("brief-*.html"), reverse=True)[:limit]
-    patched = 0
-    mgid_cfg = load_mgid_config()
-    in_article = mgid_widget_snippet(str(mgid_cfg.get("in_article_widget_id") or ""))
-    for path in brief_files:
-        content = path.read_text(encoding="utf-8")
-        updated = ensure_mgid_head_in_html(content)
-        if "article:section" not in updated:
-            updated = updated.replace(
-                '<meta property="article:modified_time"',
-                '<meta property="article:section" content="Finance" />\n  <meta property="article:modified_time"',
-                1,
-            )
-        if in_article and "data-type=\"_mgwidget\"" not in updated:
-            marker = '<div class="ezoic-ad mx-auto my-8 max-w-3xl"><div id="ezoic-pub-ad-placeholder-101"></div></div>'
-            if marker in updated:
-                updated = updated.replace(marker, marker + in_article, 1)
-        og_fix = re.search(
-            r'<meta property="og:title" content="([^"]+) \| CentsBrief"',
-            updated,
-        )
-        if og_fix:
-            updated = updated.replace(
-                og_fix.group(0),
-                f'<meta property="og:title" content="{html.escape(og_fix.group(1))}"',
-                1,
-            )
-        if updated != content:
-            path.write_text(updated.replace("\n", ""), encoding="utf-8")
-            patched += 1
-    return patched
-
-
 def publish_brief_for_date(today: dt.datetime, feed_url: str) -> str:
     if brief_exists_for_date(today):
         print(f"Brief already exists for {today.strftime('%Y-%m-%d')}; skipping generation.")
@@ -745,7 +664,9 @@ def publish_brief_for_date(today: dt.datetime, feed_url: str) -> str:
     lede = extract_lede_from_brief_text(brief_text)
     brief_html = brief_text_to_html(brief_text)
 
-    template_content = ARTICLE_TEMPLATE_PATH.read_text(encoding="utf-8")
+    template_content = article_template_markers_fill(
+        ARTICLE_TEMPLATE_PATH.read_text(encoding="utf-8")
+    )
     article_html = update_article_from_template(
         template_content=template_content,
         headline=headline,
@@ -771,7 +692,7 @@ def publish_brief_for_date(today: dt.datetime, feed_url: str) -> str:
         output_filename=output_filename,
         publish_date=today,
     )
-    updated_index = ensure_index_mgid_widgets(updated_index)
+    updated_index = apply_mgid_to_html(updated_index, "home")
     INDEX_PATH.write_text(minify_html(updated_index), encoding="utf-8")
 
     generate_sitemap(today)
@@ -804,7 +725,7 @@ def sync_homepage_from_latest_brief() -> str:
         output_filename=latest_path.name,
         publish_date=publish_date,
     )
-    updated_index = ensure_index_mgid_widgets(updated_index)
+    updated_index = apply_mgid_to_html(updated_index, "home")
     INDEX_PATH.write_text(minify_html(updated_index), encoding="utf-8")
     generate_sitemap(dt.datetime.now(dt.UTC).replace(tzinfo=None))
     generate_robots_txt()
@@ -850,7 +771,14 @@ def main() -> None:
     parser.add_argument(
         "--patch-mgid",
         action="store_true",
-        help="Add MGID head script to index and recent brief HTML files.",
+        help="Apply MGID head, lazy-load slots, and widget 2017365 across all site pages.",
+    )
+    parser.add_argument(
+        "--patch-mgid-briefs-only",
+        type=int,
+        default=0,
+        metavar="N",
+        help="When patching MGID, limit brief updates to N newest files (0 = all briefs).",
     )
     args = parser.parse_args()
 
@@ -861,10 +789,12 @@ def main() -> None:
         raise FileNotFoundError("Missing required file: index.html")
 
     if args.patch_mgid:
-        index_content = INDEX_PATH.read_text(encoding="utf-8")
-        INDEX_PATH.write_text(minify_html(ensure_index_mgid_widgets(index_content)), encoding="utf-8")
-        count = patch_recent_briefs_mgid(limit=15)
-        print(f"Patched MGID markup on index and {count} recent brief(s).")
+        limit = args.patch_mgid_briefs_only
+        count = apply_mgid_sitewide(
+            include_all_briefs=limit == 0,
+            brief_limit=limit if limit > 0 else 0,
+        )
+        print(f"Patched MGID on {count} page(s) (site 1097226, widget 2017365).")
         generate_sitemap(dt.datetime.now(dt.UTC).replace(tzinfo=None))
         generate_robots_txt()
         if args.sync_homepage_only or (args.catch_up_days <= 0 and not os.getenv("GROQ_API_KEY")):
